@@ -2,7 +2,7 @@
 
 import { use, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useDeck } from "@/hooks/useStore";
+import { useDeck } from "@/hooks/useDecks";
 import { useTimer } from "@/hooks/useTimer";
 import { shuffle } from "@/lib/utils";
 import { MIN_CARDS_FOR_MATCH, MAX_MATCH_PAIRS } from "@/lib/constants";
@@ -24,7 +24,7 @@ export default function MatchPage({
   params: Promise<{ deckId: string }>;
 }) {
   const { deckId } = use(params);
-  const deck = useDeck(deckId);
+  const { data: deck } = useDeck(deckId);
   const { elapsed, start, stop, formatTime } = useTimer();
   const [phase, setPhase] = useState<Phase>("ready");
   const [tiles, setTiles] = useState<Tile[]>([]);
@@ -57,7 +57,6 @@ export default function MatchPage({
     start();
   }, [deck, start]);
 
-  // Check if all matched
   useEffect(() => {
     if (phase === "playing" && tiles.length > 0 && tiles.every((t) => t.matched)) {
       stop();
@@ -66,13 +65,13 @@ export default function MatchPage({
   }, [tiles, phase, stop]);
 
   if (!deck) {
-    return <div className="text-center py-12 text-gray-400">Loading...</div>;
+    return <div className="text-center py-12 text-[#9A9A94]">Loading...</div>;
   }
 
   if (deck.cards.length < MIN_CARDS_FOR_MATCH) {
     return (
       <div className="text-center py-16">
-        <p className="text-gray-500 mb-4">
+        <p className="text-[#6A6963] mb-4">
           Need at least {MIN_CARDS_FOR_MATCH} cards for Match.
         </p>
         <Link href={`/decks/${deckId}`}>
@@ -97,9 +96,7 @@ export default function MatchPage({
 
     const first = tiles.find((t) => t.id === selected)!;
 
-    // Must be different types (term vs definition) and same card
     if (first.type !== tile.type && first.cardId === tile.cardId) {
-      // Match!
       setTiles((prev) =>
         prev.map((t) =>
           t.cardId === tile.cardId ? { ...t, matched: true } : t
@@ -107,7 +104,6 @@ export default function MatchPage({
       );
       setSelected(null);
     } else {
-      // Wrong
       setErrors((e) => e + 1);
       setShakeIds([first.id, tile.id]);
       setTimeout(() => {
@@ -117,19 +113,19 @@ export default function MatchPage({
     }
   }
 
-  // READY
   if (phase === "ready") {
     return (
-      <div className="text-center py-16">
+      <div className="text-center py-16 px-4">
         <Link
           href={`/decks/${deckId}`}
-          className="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-block"
+          className="text-sm text-[#6A6963] hover:text-[#1A1A1A] mb-4 inline-block"
         >
-          ← Back
+          <i className="fa-solid fa-arrow-left mr-1" /> Back
         </Link>
-        <div className="text-5xl mb-4">🎯</div>
-        <h1 className="text-2xl font-bold mb-2">Match Game</h1>
-        <p className="text-gray-500 mb-6">
+        <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold text-[#1A1A1A] mb-2">
+          Match Game
+        </h1>
+        <p className="text-[#6A6963] mb-6">
           Match terms with their definitions as fast as you can!
         </p>
         <Button size="lg" onClick={initGame}>
@@ -139,16 +135,16 @@ export default function MatchPage({
     );
   }
 
-  // DONE
   if (phase === "done") {
     return (
-      <div className="text-center py-12">
-        <div className="text-5xl mb-4">🏆</div>
-        <h2 className="text-2xl font-bold mb-2">Complete!</h2>
-        <p className="text-lg text-gray-600 mb-1">
+      <div className="text-center py-12 px-4">
+        <h2 className="font-[family-name:var(--font-display)] text-3xl font-bold text-[#1A1A1A] mb-2">
+          Complete!
+        </h2>
+        <p className="text-lg text-[#6A6963] mb-1">
           Time: {formatTime(elapsed)}
         </p>
-        <p className="text-gray-400 mb-6">
+        <p className="text-[#9A9A94] mb-6">
           {errors} {errors === 1 ? "mistake" : "mistakes"}
         </p>
         <div className="flex gap-3 justify-center">
@@ -161,32 +157,31 @@ export default function MatchPage({
     );
   }
 
-  // PLAYING
   return (
-    <div>
+    <div className="p-6 lg:p-8">
       <div className="flex items-center justify-between mb-4">
         <Link
           href={`/decks/${deckId}`}
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="text-sm text-[#6A6963] hover:text-[#1A1A1A]"
         >
-          ← Back
+          <i className="fa-solid fa-arrow-left mr-1" /> Back
         </Link>
-        <span className="text-sm font-medium">{formatTime(elapsed)}</span>
-        <span className="text-sm text-gray-400">{errors} mistakes</span>
+        <span className="text-sm font-medium text-[#1A1A1A]">{formatTime(elapsed)}</span>
+        <span className="text-sm text-[#9A9A94]">{errors} mistakes</span>
       </div>
 
-      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 max-w-2xl mx-auto">
         {tiles.map((tile) => {
           const isSelected = selected === tile.id;
           const isShaking = shakeIds.includes(tile.id);
 
-          let style = "border-gray-200 bg-white hover:border-indigo-300";
+          let style = "border-[#E8DDD0] bg-white hover:border-[#D4AF37]";
           if (tile.matched) {
-            style = "border-green-300 bg-green-50 opacity-40 pointer-events-none";
+            style = "border-[#2D6A4F] bg-[#2D6A4F10] opacity-40 pointer-events-none";
           } else if (isShaking) {
-            style = "border-red-500 bg-red-50 animate-pulse";
+            style = "border-[#8B0000] bg-[#8B000010] animate-pulse";
           } else if (isSelected) {
-            style = "border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200";
+            style = "border-[#D4AF37] bg-[#D4AF3720] ring-2 ring-[#D4AF37]/30";
           }
 
           return (
@@ -194,7 +189,7 @@ export default function MatchPage({
               key={tile.id}
               onClick={() => handleTileClick(tile)}
               disabled={tile.matched}
-              className={`rounded-xl border p-3 min-h-[80px] text-sm font-medium transition-all ${style}`}
+              className={`rounded-xl border p-3 min-h-[80px] text-sm font-medium text-[#1A1A1A] transition-all ${style}`}
             >
               {tile.text}
             </button>

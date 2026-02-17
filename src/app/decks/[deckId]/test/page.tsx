@@ -2,7 +2,7 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
-import { useDeck } from "@/hooks/useStore";
+import { useDeck } from "@/hooks/useDecks";
 import { generateTest, gradeWritten } from "@/lib/test-generator";
 import { MIN_CARDS_FOR_TEST } from "@/lib/constants";
 import { TestQuestion, TestConfig, QuestionType } from "@/lib/types";
@@ -17,14 +17,13 @@ export default function TestPage({
   params: Promise<{ deckId: string }>;
 }) {
   const { deckId } = use(params);
-  const deck = useDeck(deckId);
+  const { data: deck } = useDeck(deckId);
   const [phase, setPhase] = useState<Phase>("config");
   const [questions, setQuestions] = useState<TestQuestion[]>([]);
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [gradedQuestions, setGradedQuestions] = useState<TestQuestion[]>([]);
 
-  // Config state
   const [selectedTypes, setSelectedTypes] = useState<QuestionType[]>([
     "multiple-choice",
     "true-false",
@@ -33,13 +32,13 @@ export default function TestPage({
   const [questionCount, setQuestionCount] = useState(10);
 
   if (!deck) {
-    return <div className="text-center py-12 text-gray-400">Loading...</div>;
+    return <div className="text-center py-12 text-[#9A9A94]">Loading...</div>;
   }
 
   if (deck.cards.length < MIN_CARDS_FOR_TEST) {
     return (
       <div className="text-center py-16">
-        <p className="text-gray-500 mb-4">
+        <p className="text-[#6A6963] mb-4">
           Need at least {MIN_CARDS_FOR_TEST} cards to use Test mode.
         </p>
         <Link href={`/decks/${deckId}`}>
@@ -85,7 +84,6 @@ export default function TestPage({
     );
   }
 
-  // CONFIG PHASE
   if (phase === "config") {
     const types: { type: QuestionType; label: string }[] = [
       { type: "multiple-choice", label: "Multiple Choice" },
@@ -94,18 +92,20 @@ export default function TestPage({
     ];
 
     return (
-      <div>
+      <div className="p-6 lg:p-8 max-w-2xl mx-auto">
         <Link
           href={`/decks/${deckId}`}
-          className="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-block"
+          className="text-sm text-[#6A6963] hover:text-[#1A1A1A] mb-4 inline-block"
         >
-          ← Back
+          <i className="fa-solid fa-arrow-left mr-1" /> Back
         </Link>
-        <h1 className="text-2xl font-bold mb-6">Test Configuration</h1>
+        <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold text-[#1A1A1A] mb-6">
+          Test Configuration
+        </h1>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm space-y-6">
+        <div className="rounded-xl border border-[#E8DDD0] bg-white p-6 space-y-6">
           <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-3">
+            <h3 className="text-sm font-medium text-[#1A1A1A] mb-3">
               Question types
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -115,8 +115,8 @@ export default function TestPage({
                   onClick={() => toggleType(type)}
                   className={`rounded-lg border px-4 py-2 text-sm transition-colors ${
                     selectedTypes.includes(type)
-                      ? "border-indigo-500 bg-indigo-50 text-indigo-700"
-                      : "border-gray-200 text-gray-500 hover:border-gray-300"
+                      ? "border-[#D4AF37] bg-[#D4AF3720] text-[#1A1A1A] font-medium"
+                      : "border-[#E8DDD0] text-[#6A6963] hover:border-[#D5C8B2]"
                   }`}
                 >
                   {label}
@@ -126,7 +126,7 @@ export default function TestPage({
           </div>
 
           <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-2">
+            <h3 className="text-sm font-medium text-[#1A1A1A] mb-2">
               Number of questions
             </h3>
             <input
@@ -135,11 +135,10 @@ export default function TestPage({
               max={deck.cards.length}
               value={Math.min(questionCount, deck.cards.length)}
               onChange={(e) => setQuestionCount(Number(e.target.value))}
-              className="w-full"
+              className="w-full accent-[#D4AF37]"
             />
-            <p className="text-sm text-gray-400 mt-1">
-              {Math.min(questionCount, deck.cards.length)} of {deck.cards.length}{" "}
-              cards
+            <p className="text-sm text-[#9A9A94] mt-1">
+              {Math.min(questionCount, deck.cards.length)} of {deck.cards.length} cards
             </p>
           </div>
 
@@ -155,29 +154,28 @@ export default function TestPage({
     );
   }
 
-  // TESTING PHASE
   if (phase === "testing") {
     const q = questions[current];
     const answered = Object.keys(answers).length;
 
     return (
-      <div>
+      <div className="p-6 lg:p-8 max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-4">
-          <span className="text-sm text-gray-400">
+          <span className="text-sm text-[#9A9A94]">
             Question {current + 1} / {questions.length}
           </span>
-          <span className="text-sm text-gray-400">
+          <span className="text-sm text-[#9A9A94]">
             {answered} answered
           </span>
         </div>
 
         <ProgressBar value={current + 1} max={questions.length} className="mb-6" />
 
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mb-6">
-          <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">
+        <div className="rounded-xl border border-[#E8DDD0] bg-white p-6 mb-6">
+          <p className="text-xs text-[#9A9A94] uppercase tracking-wide mb-2">
             {q.type.replace("-", " ")}
           </p>
-          <p className="text-lg font-semibold">{q.prompt}</p>
+          <p className="text-lg font-semibold text-[#1A1A1A]">{q.prompt}</p>
         </div>
 
         {q.type === "written" ? (
@@ -186,7 +184,7 @@ export default function TestPage({
             placeholder="Type your answer..."
             value={answers[q.id] ?? ""}
             onChange={(e) => selectAnswer(q.id, e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="w-full rounded-xl border border-[#D5C8B2] bg-white px-4 py-3 text-sm text-[#1A1A1A] placeholder:text-[#9A9A94] focus:border-[#D4AF37] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
           />
         ) : (
           <div className="space-y-2">
@@ -194,10 +192,10 @@ export default function TestPage({
               <button
                 key={option}
                 onClick={() => selectAnswer(q.id, option)}
-                className={`w-full text-left rounded-lg border p-4 text-sm transition-colors ${
+                className={`w-full text-left rounded-xl border p-4 text-sm transition-colors ${
                   answers[q.id] === option
-                    ? "border-indigo-500 bg-indigo-50 text-indigo-700"
-                    : "border-gray-200 bg-white hover:border-gray-300"
+                    ? "border-[#D4AF37] bg-[#D4AF3720] text-[#1A1A1A] font-medium"
+                    : "border-[#E8DDD0] bg-white text-[#1A1A1A] hover:border-[#D5C8B2]"
                 }`}
               >
                 {option}
@@ -231,16 +229,17 @@ export default function TestPage({
     );
   }
 
-  // RESULTS PHASE
+  // RESULTS
   const correct = gradedQuestions.filter((q) => q.isCorrect).length;
   const pct = Math.round((correct / gradedQuestions.length) * 100);
 
   return (
-    <div>
+    <div className="p-6 lg:p-8 max-w-2xl mx-auto">
       <div className="text-center py-8 mb-6">
-        <div className="text-5xl mb-4">{pct >= 70 ? "🎉" : "📖"}</div>
-        <h2 className="text-2xl font-bold mb-2">Test Complete!</h2>
-        <p className="text-lg text-gray-600">
+        <h2 className="font-[family-name:var(--font-display)] text-3xl font-bold text-[#1A1A1A] mb-2">
+          Test Complete!
+        </h2>
+        <p className="text-lg text-[#6A6963]">
           {correct} / {gradedQuestions.length} correct ({pct}%)
         </p>
       </div>
@@ -249,25 +248,25 @@ export default function TestPage({
         {gradedQuestions.map((q, i) => (
           <div
             key={q.id}
-            className={`rounded-lg border p-4 ${
+            className={`rounded-xl border p-4 ${
               q.isCorrect
-                ? "border-green-200 bg-green-50"
-                : "border-red-200 bg-red-50"
+                ? "border-[#2D6A4F] bg-[#2D6A4F10]"
+                : "border-[#8B0000] bg-[#8B000010]"
             }`}
           >
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wide">
-                  Q{i + 1} · {q.type.replace("-", " ")}
+                <p className="text-xs text-[#9A9A94] uppercase tracking-wide">
+                  Q{i + 1} &middot; {q.type.replace("-", " ")}
                 </p>
-                <p className="font-medium text-sm mt-1">{q.prompt}</p>
+                <p className="font-medium text-sm text-[#1A1A1A] mt-1">{q.prompt}</p>
               </div>
-              <span className="text-lg">{q.isCorrect ? "✓" : "✗"}</span>
+              <span className="text-lg">{q.isCorrect ? "\u2713" : "\u2717"}</span>
             </div>
             {!q.isCorrect && (
               <div className="mt-2 text-sm">
-                <p className="text-red-600">Your answer: {q.userAnswer || "(empty)"}</p>
-                <p className="text-green-700">Correct: {q.correctAnswer}</p>
+                <p className="text-[#8B0000]">Your answer: {q.userAnswer || "(empty)"}</p>
+                <p className="text-[#2D6A4F]">Correct: {q.correctAnswer}</p>
               </div>
             )}
           </div>

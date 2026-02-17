@@ -2,7 +2,7 @@
 
 import { use } from "react";
 import Link from "next/link";
-import { useDeck } from "@/hooks/useStore";
+import { useDeck } from "@/hooks/useDecks";
 import DeckForm from "@/components/deck/DeckForm";
 import Button from "@/components/ui/Button";
 
@@ -12,28 +12,38 @@ export default function EditDeckPage({
   params: Promise<{ deckId: string }>;
 }) {
   const { deckId } = use(params);
-  const deck = useDeck(deckId);
+  const { data: deck, isLoading } = useDeck(deckId);
 
-  if (deck === null) {
-    return <div className="text-center py-12 text-gray-400">Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="p-8">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 w-48 rounded bg-[#D5C8B2]" />
+          <div className="h-10 rounded bg-[#D5C8B2]" />
+          <div className="h-24 rounded bg-[#D5C8B2]" />
+        </div>
+      </div>
+    );
   }
 
   if (!deck) {
     return (
       <div className="text-center py-16">
-        <h2 className="text-lg font-semibold text-gray-700 mb-2">
+        <h2 className="text-lg font-semibold text-[#1A1A1A] mb-2">
           Deck not found
         </h2>
         <Link href="/">
-          <Button variant="secondary">Back to decks</Button>
+          <Button variant="secondary">Back to home</Button>
         </Link>
       </div>
     );
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Edit Deck</h1>
+    <div className="p-6 lg:p-8 max-w-2xl">
+      <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold text-[#1A1A1A] mb-6">
+        Edit Deck
+      </h1>
       <DeckForm deck={deck} />
     </div>
   );

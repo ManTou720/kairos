@@ -18,6 +18,30 @@ export interface Deck {
   title: string;
   description: string;
   cards: Card[];
+  folderId?: string | null;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface DeckSummary {
+  id: string;
+  title: string;
+  description: string;
+  folderId: string | null;
+  cardCount: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface User {
+  id: string;
+  username: string;
+}
+
+export interface Folder {
+  id: string;
+  name: string;
+  deckCount: number;
   createdAt: number;
   updatedAt: number;
 }

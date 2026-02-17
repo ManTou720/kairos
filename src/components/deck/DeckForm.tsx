@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { mutate } from "swr";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import CardRow from "./CardRow";
-import { createDeck, updateDeck } from "@/lib/storage";
+import * as api from "@/lib/api";
 import { Deck } from "@/lib/types";
 
 interface CardField {
@@ -28,6 +29,7 @@ export default function DeckForm({ deck }: DeckFormProps) {
       { term: "", definition: "" },
     ]
   );
+  const [submitting, setSubmitting] = useState(false);
 
   function updateCard(index: number, field: "term" | "definition", value: string) {
     setCards((prev) => {
@@ -45,17 +47,32 @@ export default function DeckForm({ deck }: DeckFormProps) {
     setCards((prev) => [...prev, { term: "", definition: "" }]);
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const validCards = cards.filter((c) => c.term.trim() && c.definition.trim());
     if (!title.trim() || validCards.length < 1) return;
 
-    if (deck) {
-      updateDeck(deck.id, title.trim(), description.trim(), validCards);
-      router.push(`/decks/${deck.id}`);
-    } else {
-      const newDeck = createDeck(title.trim(), description.trim(), validCards);
-      router.push(`/decks/${newDeck.id}`);
+    setSubmitting(true);
+    try {
+      if (deck) {
+        await api.updateDeck(deck.id, {
+          title: title.trim(),
+          description: description.trim(),
+          cards: validCards,
+        });
+        mutate(`/api/decks/${deck.id}`);
+        router.push(`/decks/${deck.id}`);
+      } else {
+        const newDeck = await api.createDeck({
+          title: title.trim(),
+          description: description.trim(),
+          cards: validCards,
+        });
+        mutate("/api/decks");
+        router.push(`/decks/${newDeck.id}`);
+      }
+    } catch {
+      setSubmitting(false);
     }
   }
 
@@ -74,7 +91,7 @@ export default function DeckForm({ deck }: DeckFormProps) {
         <div>
           <label
             htmlFor="description"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-[#1A1A1A] mb-1"
           >
             Description
           </label>
@@ -84,14 +101,14 @@ export default function DeckForm({ deck }: DeckFormProps) {
             placeholder="Add a description (optional)"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="w-full rounded-lg border border-[#D5C8B2] bg-white px-3 py-2 text-sm text-[#1A1A1A] placeholder:text-[#9A9A94] focus:border-[#D4AF37] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
           />
         </div>
       </div>
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-gray-700">
+          <h3 className="text-sm font-medium text-[#1A1A1A]">
             Cards ({validCount} valid)
           </h3>
           <Button type="button" variant="ghost" size="sm" onClick={addCard}>
@@ -112,8 +129,8 @@ export default function DeckForm({ deck }: DeckFormProps) {
       </div>
 
       <div className="flex gap-3">
-        <Button type="submit" disabled={!title.trim() || validCount < 1}>
-          {deck ? "Save changes" : "Create deck"}
+        <Button type="submit" disabled={!title.trim() || validCount < 1 || submitting}>
+          {submitting ? "Saving..." : deck ? "Save changes" : "Create deck"}
         </Button>
         <Button type="button" variant="secondary" onClick={() => router.back()}>
           Cancel

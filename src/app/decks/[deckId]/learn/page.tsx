@@ -2,10 +2,10 @@
 
 import { use, useState, useMemo } from "react";
 import Link from "next/link";
-import { useDeck } from "@/hooks/useStore";
+import { useDeck } from "@/hooks/useDecks";
 import { shuffle } from "@/lib/utils";
 import { calculateSR } from "@/lib/sr";
-import { updateCardSR } from "@/lib/storage";
+import * as api from "@/lib/api";
 import { MIN_CARDS_FOR_LEARN } from "@/lib/constants";
 import Button from "@/components/ui/Button";
 import ProgressBar from "@/components/ui/ProgressBar";
@@ -35,7 +35,7 @@ export default function LearnPage({
   params: Promise<{ deckId: string }>;
 }) {
   const { deckId } = use(params);
-  const deck = useDeck(deckId);
+  const { data: deck } = useDeck(deckId);
   const [questions, setQuestions] = useState<LearnItem[] | null>(null);
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -51,13 +51,13 @@ export default function LearnPage({
   }, [questions, deck]);
 
   if (!deck) {
-    return <div className="text-center py-12 text-gray-400">Loading...</div>;
+    return <div className="text-center py-12 text-[#9A9A94]">Loading...</div>;
   }
 
   if (deck.cards.length < MIN_CARDS_FOR_LEARN) {
     return (
       <div className="text-center py-16">
-        <p className="text-gray-500 mb-4">
+        <p className="text-[#6A6963] mb-4">
           Need at least {MIN_CARDS_FOR_LEARN} cards to use Learn mode.
         </p>
         <Link href={`/decks/${deckId}`}>
@@ -70,13 +70,14 @@ export default function LearnPage({
   if (done) {
     const correct = results.filter(Boolean).length;
     return (
-      <div className="text-center py-12">
-        <div className="text-5xl mb-4">🎉</div>
-        <h2 className="text-2xl font-bold mb-2">Session Complete!</h2>
-        <p className="text-lg text-gray-600 mb-1">
+      <div className="text-center py-12 px-4">
+        <h2 className="font-[family-name:var(--font-display)] text-3xl font-bold text-[#1A1A1A] mb-2">
+          Session Complete!
+        </h2>
+        <p className="text-lg text-[#6A6963] mb-1">
           {correct} / {results.length} correct
         </p>
-        <p className="text-gray-400 mb-6">
+        <p className="text-[#9A9A94] mb-6">
           {Math.round((correct / results.length) * 100)}% accuracy
         </p>
         <div className="flex gap-3 justify-center">
@@ -108,10 +109,9 @@ export default function LearnPage({
     const isCorrect = option === q.card.definition;
     setResults((r) => [...r, isCorrect]);
 
-    // Update SR
     const quality = isCorrect ? 4 : 1;
     const newSR = calculateSR(q.card.sr, quality);
-    updateCardSR(deckId, q.card.id, newSR);
+    api.updateCardSR(q.card.id, newSR);
   }
 
   function handleNext() {
@@ -124,37 +124,41 @@ export default function LearnPage({
   }
 
   return (
-    <div>
+    <div className="p-6 lg:p-8 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <Link
           href={`/decks/${deckId}`}
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="text-sm text-[#6A6963] hover:text-[#1A1A1A]"
         >
-          ← Back
+          <i className="fa-solid fa-arrow-left mr-1" /> Back
         </Link>
-        <h1 className="text-lg font-semibold">Learn</h1>
-        <span className="text-sm text-gray-400">
+        <h1 className="text-lg font-semibold text-[#1A1A1A] font-[family-name:var(--font-ui)]">
+          Learn
+        </h1>
+        <span className="text-sm text-[#9A9A94]">
           {current + 1} / {items.length}
         </span>
       </div>
 
       <ProgressBar value={current + 1} max={items.length} className="mb-6" />
 
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mb-6">
-        <p className="text-sm text-gray-400 mb-2">What is the definition of:</p>
-        <p className="text-xl font-semibold">{q.card.term}</p>
+      <div className="rounded-xl border border-[#E8DDD0] bg-white p-6 mb-6">
+        <p className="text-sm text-[#9A9A94] mb-2">What is the definition of:</p>
+        <p className="font-[family-name:var(--font-display)] text-2xl font-medium text-[#1A1A1A]">
+          {q.card.term}
+        </p>
       </div>
 
       <div className="space-y-3">
         {q.options.map((option, i) => {
-          let style = "border-gray-200 bg-white hover:border-indigo-300";
+          let style = "border-[#E8DDD0] bg-white hover:border-[#D4AF37]";
           if (selected) {
             if (option === q.card.definition) {
-              style = "border-green-500 bg-green-50";
-            } else if (option === selected && option !== q.card.definition) {
-              style = "border-red-500 bg-red-50";
+              style = "border-[#2D6A4F] bg-[#2D6A4F10]";
+            } else if (option === selected) {
+              style = "border-[#8B0000] bg-[#8B000010]";
             } else {
-              style = "border-gray-200 bg-gray-50 opacity-50";
+              style = "border-[#E8DDD0] bg-[#EADCC5]/30 opacity-50";
             }
           }
 
@@ -163,7 +167,7 @@ export default function LearnPage({
               key={i}
               onClick={() => handleSelect(option)}
               disabled={!!selected}
-              className={`w-full text-left rounded-lg border p-4 text-sm transition-colors ${style}`}
+              className={`w-full text-left rounded-xl border p-4 text-sm transition-colors ${style}`}
             >
               {option}
             </button>

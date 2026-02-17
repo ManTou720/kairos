@@ -20,8 +20,8 @@ export default function CardRow({
   canRemove,
 }: CardRowProps) {
   return (
-    <div className="flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
-      <span className="mt-2 text-sm font-medium text-gray-400 w-6 text-right shrink-0">
+    <div className="flex items-start gap-3 rounded-lg border border-[#E8DDD0] bg-white p-4">
+      <span className="mt-2 text-sm font-medium text-[#9A9A94] w-6 text-right shrink-0">
         {index + 1}
       </span>
       <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -40,7 +40,7 @@ export default function CardRow({
         type="button"
         onClick={onRemove}
         disabled={!canRemove}
-        className="mt-2 text-gray-400 hover:text-red-500 disabled:opacity-30 disabled:hover:text-gray-400 transition-colors"
+        className="mt-2 text-[#9A9A94] hover:text-[#8B0000] disabled:opacity-30 disabled:hover:text-[#9A9A94] transition-colors"
         title="Remove card"
       >
         <svg

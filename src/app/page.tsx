@@ -1,54 +1,83 @@
 "use client";
 
-import { useEffect } from "react";
 import Link from "next/link";
-import { useDecks } from "@/hooks/useStore";
-import { loadSampleData } from "@/lib/sample-data";
+import { useDecks } from "@/hooks/useDecks";
 import DeckCard from "@/components/deck/DeckCard";
-import Button from "@/components/ui/Button";
 
-export default function HomePage() {
-  const decks = useDecks();
+export default function DashboardPage() {
+  const { data: decks, isLoading } = useDecks();
 
-  useEffect(() => {
-    loadSampleData();
-  }, []);
-
-  if (decks === null) {
-    return <div className="text-center py-12 text-gray-400">Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="p-8 lg:p-10">
+        <div className="animate-pulse space-y-8">
+          <div className="h-8 w-48 rounded bg-[#D5C8B2]" />
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-32 rounded-xl bg-[#D5C8B2]" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Your Decks</h1>
-        <Link href="/decks/new">
-          <Button>+ Create deck</Button>
-        </Link>
-      </div>
+  const sorted = [...(decks || [])].sort((a, b) => b.updatedAt - a.updatedAt);
+  const recent = sorted.slice(0, 4);
 
-      {decks.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="text-5xl mb-4">📚</div>
-          <h2 className="text-lg font-semibold text-gray-700 mb-2">
-            No decks yet
+  return (
+    <div className="p-6 lg:p-10 space-y-8">
+      {/* Jump back in */}
+      {recent.length > 0 && (
+        <section>
+          <h2 className="font-[family-name:var(--font-display)] text-[28px] font-medium text-[#1A1A1A] tracking-tight mb-4">
+            Jump back in
           </h2>
-          <p className="text-gray-500 mb-6">
-            Create your first flashcard deck to get started.
-          </p>
-          <Link href="/decks/new">
-            <Button size="lg">Create your first deck</Button>
-          </Link>
-        </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {decks
-            .sort((a, b) => b.updatedAt - a.updatedAt)
-            .map((deck) => (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {recent.slice(0, 2).map((deck) => (
               <DeckCard key={deck.id} deck={deck} />
             ))}
-        </div>
+          </div>
+        </section>
       )}
+
+      {/* Recents */}
+      <section>
+        <h2 className="font-[family-name:var(--font-display)] text-[28px] font-medium text-[#1A1A1A] tracking-tight mb-4">
+          Recents
+        </h2>
+        {sorted.length === 0 ? (
+          <div className="text-center py-12 rounded-xl border border-[#E8DDD0] bg-white">
+            <p className="text-[#6A6963] mb-4">No decks yet</p>
+            <Link
+              href="/decks/new"
+              className="inline-flex items-center rounded-lg bg-[#D4AF37] px-4 py-2 text-sm font-semibold text-[#1A1A1A] hover:bg-[#C9A02E] transition-colors"
+            >
+              Create your first deck
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {sorted.map((deck) => (
+              <Link
+                key={deck.id}
+                href={`/decks/${deck.id}`}
+                className="flex items-center justify-between rounded-xl border border-[#E8DDD0] bg-white px-5 py-4 hover:shadow-md transition-shadow"
+              >
+                <div>
+                  <h3 className="font-semibold text-[#1A1A1A] text-sm font-[family-name:var(--font-ui)]">
+                    {deck.title}
+                  </h3>
+                  <p className="text-xs text-[#9A9A94] mt-1">
+                    {deck.cardCount} cards
+                  </p>
+                </div>
+                <i className="fa-solid fa-chevron-right text-xs text-[#9A9A94]" />
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

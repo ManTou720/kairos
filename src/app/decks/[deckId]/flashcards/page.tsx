@@ -2,7 +2,7 @@
 
 import { use, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
-import { useDeck } from "@/hooks/useStore";
+import { useDeck } from "@/hooks/useDecks";
 import { useKeyboard } from "@/hooks/useKeyboard";
 import { shuffle } from "@/lib/utils";
 import { Card } from "@/lib/types";
@@ -16,7 +16,7 @@ export default function FlashcardsPage({
   params: Promise<{ deckId: string }>;
 }) {
   const { deckId } = use(params);
-  const deck = useDeck(deckId);
+  const { data: deck } = useDeck(deckId);
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [cards, setCards] = useState<Card[] | null>(null);
@@ -63,29 +63,31 @@ export default function FlashcardsPage({
   useKeyboard(handlers);
 
   if (!deck) {
-    return <div className="text-center py-12 text-gray-400">Loading...</div>;
+    return <div className="text-center py-12 text-[#9A9A94]">Loading...</div>;
   }
 
   const current = displayCards[index];
   if (!current) return null;
 
   return (
-    <div>
+    <div className="p-6 lg:p-8 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <Link
           href={`/decks/${deckId}`}
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="text-sm text-[#6A6963] hover:text-[#1A1A1A]"
         >
-          ← Back
+          <i className="fa-solid fa-arrow-left mr-1" /> Back
         </Link>
-        <h1 className="text-lg font-semibold">{deck.title}</h1>
+        <h1 className="text-lg font-semibold text-[#1A1A1A] font-[family-name:var(--font-ui)]">
+          {deck.title}
+        </h1>
         <Button variant="ghost" size="sm" onClick={doShuffle}>
-          Shuffle
+          <i className="fa-solid fa-shuffle mr-1" /> Shuffle
         </Button>
       </div>
 
       <ProgressBar value={index + 1} max={displayCards.length} className="mb-2" />
-      <p className="text-sm text-gray-400 text-center mb-4">
+      <p className="text-sm text-[#9A9A94] text-center mb-4">
         {index + 1} / {displayCards.length}
       </p>
 
@@ -98,19 +100,19 @@ export default function FlashcardsPage({
 
       <div className="flex justify-center gap-4 mt-6">
         <Button variant="secondary" onClick={prev} disabled={index === 0}>
-          ← Previous
+          <i className="fa-solid fa-arrow-left mr-1" /> Previous
         </Button>
         <Button
           variant="secondary"
           onClick={next}
           disabled={index === displayCards.length - 1}
         >
-          Next →
+          Next <i className="fa-solid fa-arrow-right ml-1" />
         </Button>
       </div>
 
-      <p className="text-xs text-gray-400 text-center mt-4">
-        Space to flip · ← → to navigate · S to shuffle
+      <p className="text-xs text-[#9A9A94] text-center mt-4">
+        Space to flip &middot; Arrow keys to navigate &middot; S to shuffle
       </p>
     </div>
   );
