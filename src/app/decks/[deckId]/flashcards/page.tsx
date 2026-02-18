@@ -7,8 +7,6 @@ import { useKeyboard } from "@/hooks/useKeyboard";
 import { shuffle } from "@/lib/utils";
 import { Card } from "@/lib/types";
 import FlashcardCard from "@/components/flashcards/FlashcardCard";
-import Button from "@/components/ui/Button";
-import ProgressBar from "@/components/ui/ProgressBar";
 
 export default function FlashcardsPage({
   params,
@@ -20,6 +18,8 @@ export default function FlashcardsPage({
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [cards, setCards] = useState<Card[] | null>(null);
+  const [known, setKnown] = useState<Set<string>>(new Set());
+  const [learning, setLearning] = useState<Set<string>>(new Set());
 
   const displayCards = useMemo(() => {
     if (cards) return cards;
@@ -39,6 +39,30 @@ export default function FlashcardsPage({
       setFlipped(false);
     }
   }, [index, displayCards.length]);
+
+  const markKnown = useCallback(() => {
+    const current = displayCards[index];
+    if (!current) return;
+    setKnown((prev) => new Set(prev).add(current.id));
+    setLearning((prev) => {
+      const next = new Set(prev);
+      next.delete(current.id);
+      return next;
+    });
+    next();
+  }, [displayCards, index, next]);
+
+  const markLearning = useCallback(() => {
+    const current = displayCards[index];
+    if (!current) return;
+    setLearning((prev) => new Set(prev).add(current.id));
+    setKnown((prev) => {
+      const next = new Set(prev);
+      next.delete(current.id);
+      return next;
+    });
+    next();
+  }, [displayCards, index, next]);
 
   const doShuffle = useCallback(() => {
     if (!deck) return;
@@ -63,57 +87,103 @@ export default function FlashcardsPage({
   useKeyboard(handlers);
 
   if (!deck) {
-    return <div className="text-center py-12 text-[#9A9A94]">Loading...</div>;
+    return <div className="text-center py-12 text-[#9A9A94]">載入中...</div>;
   }
 
   const current = displayCards[index];
   if (!current) return null;
 
   return (
-    <div className="p-6 lg:p-8 max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-4">
-        <Link
-          href={`/decks/${deckId}`}
-          className="text-sm text-[#6A6963] hover:text-[#1A1A1A]"
-        >
-          <i className="fa-solid fa-arrow-left mr-1" /> Back
-        </Link>
-        <h1 className="text-lg font-semibold text-[#1A1A1A] font-[family-name:var(--font-ui)]">
-          {deck.title}
-        </h1>
-        <Button variant="ghost" size="sm" onClick={doShuffle}>
-          <i className="fa-solid fa-shuffle mr-1" /> Shuffle
-        </Button>
+    <div className="flex flex-col h-full">
+      {/* Top bar */}
+      <div className="flex items-center justify-between h-14 px-4 lg:px-6 bg-white border-b border-[#E8DDD0] shrink-0">
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/decks/${deckId}`}
+            className="text-[#6A6963] hover:text-[#1A1A1A] transition-colors"
+          >
+            <i className="fa-solid fa-xmark text-lg" />
+          </Link>
+          <span className="font-semibold text-[#1A1A1A]">{deck.title}</span>
+        </div>
+        <span className="font-mono text-sm text-[#1A1A1A]">
+          {index + 1} / {displayCards.length}
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={doShuffle}
+            className="flex items-center gap-1.5 text-sm text-[#6A6963] hover:text-[#1A1A1A] transition-colors"
+          >
+            <i className="fa-solid fa-shuffle" />
+            <span className="hidden sm:inline">隨機</span>
+          </button>
+        </div>
       </div>
 
-      <ProgressBar value={index + 1} max={displayCards.length} className="mb-2" />
-      <p className="text-sm text-[#9A9A94] text-center mb-4">
-        {index + 1} / {displayCards.length}
-      </p>
+      {/* Body */}
+      <div className="flex-1 flex flex-col items-center justify-center gap-5 px-5 lg:px-20 py-6">
+        {/* Progress row */}
+        <div className="flex items-center justify-between w-full max-w-[720px] px-2">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full bg-[#FFF3EE] border-2 border-[#E85D3A] flex items-center justify-center">
+              <span className="text-xs font-semibold text-[#E85D3A]">{learning.size}</span>
+            </div>
+            <span className="text-sm font-medium text-[#E85D3A]">仍在學習</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-[#2BAC6E]">知道</span>
+            <div className="w-7 h-7 rounded-full bg-[#E8F5EE] border-2 border-[#2BAC6E] flex items-center justify-center">
+              <span className="text-xs font-semibold text-[#2BAC6E]">{known.size}</span>
+            </div>
+          </div>
+        </div>
 
-      <FlashcardCard
-        term={current.term}
-        definition={current.definition}
-        flipped={flipped}
-        onFlip={() => setFlipped((f) => !f)}
-      />
+        {/* Flashcard */}
+        <div className="w-full max-w-[720px]">
+          <FlashcardCard
+            term={current.term}
+            definition={current.definition}
+            flipped={flipped}
+            onFlip={() => setFlipped((f) => !f)}
+          />
+        </div>
 
-      <div className="flex justify-center gap-4 mt-6">
-        <Button variant="secondary" onClick={prev} disabled={index === 0}>
-          <i className="fa-solid fa-arrow-left mr-1" /> Previous
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={next}
-          disabled={index === displayCards.length - 1}
-        >
-          Next <i className="fa-solid fa-arrow-right ml-1" />
-        </Button>
+        {/* X and Check buttons */}
+        <div className="flex items-center justify-center gap-8">
+          <button
+            onClick={markLearning}
+            className="w-14 h-14 rounded-full bg-[#FFF3EE] flex items-center justify-center hover:bg-[#FFE8DE] transition-colors"
+          >
+            <i className="fa-solid fa-xmark text-2xl text-[#E85D3A]" />
+          </button>
+          <button
+            onClick={markKnown}
+            className="w-14 h-14 rounded-full bg-[#E8F5EE] flex items-center justify-center hover:bg-[#D0EBD8] transition-colors"
+          >
+            <i className="fa-solid fa-check text-2xl text-[#2BAC6E]" />
+          </button>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="flex items-center justify-between w-full max-w-[720px]">
+          <button
+            onClick={prev}
+            disabled={index === 0}
+            className="text-[#5C4A32] hover:text-[#1A1A1A] disabled:opacity-30 transition-colors"
+          >
+            <i className="fa-solid fa-rotate-left text-lg" />
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-[#D4AF37]">追蹤進度</span>
+          </div>
+          <button
+            onClick={doShuffle}
+            className="text-[#5C4A32] hover:text-[#1A1A1A] transition-colors"
+          >
+            <i className="fa-solid fa-shuffle text-lg" />
+          </button>
+        </div>
       </div>
-
-      <p className="text-xs text-[#9A9A94] text-center mt-4">
-        Space to flip &middot; Arrow keys to navigate &middot; S to shuffle
-      </p>
     </div>
   );
 }

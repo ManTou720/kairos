@@ -26,36 +26,34 @@ export default function CardRow({
       </span>
       <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input
-          placeholder="Term"
+          placeholder="詞語"
           value={term}
           onChange={(e) => onChange("term", e.target.value)}
         />
         <Input
-          placeholder="Definition"
+          placeholder="定義"
           value={definition}
           onChange={(e) => onChange("definition", e.target.value)}
         />
       </div>
-      <button
-        type="button"
-        onClick={onRemove}
-        disabled={!canRemove}
-        className="mt-2 text-[#9A9A94] hover:text-[#8B0000] disabled:opacity-30 disabled:hover:text-[#9A9A94] transition-colors"
-        title="Remove card"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-5 w-5"
-          viewBox="0 0 20 20"
-          fill="currentColor"
+      <div className="flex items-center gap-1 mt-2">
+        <button
+          type="button"
+          className="text-[#9A9A94] hover:text-[#1A1A1A] transition-colors"
+          title="發音"
         >
-          <path
-            fillRule="evenodd"
-            d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-            clipRule="evenodd"
-          />
-        </svg>
-      </button>
+          <i className="fa-solid fa-volume-high text-sm" />
+        </button>
+        <button
+          type="button"
+          onClick={onRemove}
+          disabled={!canRemove}
+          className="text-[#9A9A94] hover:text-[#8B0000] disabled:opacity-30 disabled:hover:text-[#9A9A94] transition-colors"
+          title="刪除卡片"
+        >
+          <i className="fa-solid fa-trash text-sm" />
+        </button>
+      </div>
     </div>
   );
 }

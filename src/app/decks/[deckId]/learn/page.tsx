@@ -51,17 +51,17 @@ export default function LearnPage({
   }, [questions, deck]);
 
   if (!deck) {
-    return <div className="text-center py-12 text-[#9A9A94]">Loading...</div>;
+    return <div className="text-center py-12 text-[#9A9A94]">載入中...</div>;
   }
 
   if (deck.cards.length < MIN_CARDS_FOR_LEARN) {
     return (
       <div className="text-center py-16">
         <p className="text-[#6A6963] mb-4">
-          Need at least {MIN_CARDS_FOR_LEARN} cards to use Learn mode.
+          學習模式至少需要 {MIN_CARDS_FOR_LEARN} 張卡片。
         </p>
         <Link href={`/decks/${deckId}`}>
-          <Button variant="secondary">Back to deck</Button>
+          <Button variant="secondary">返回學習集</Button>
         </Link>
       </div>
     );
@@ -72,13 +72,13 @@ export default function LearnPage({
     return (
       <div className="text-center py-12 px-4">
         <h2 className="font-[family-name:var(--font-display)] text-3xl font-bold text-[#1A1A1A] mb-2">
-          Session Complete!
+          學習完成！
         </h2>
         <p className="text-lg text-[#6A6963] mb-1">
-          {correct} / {results.length} correct
+          {correct} / {results.length} 正確
         </p>
         <p className="text-[#9A9A94] mb-6">
-          {Math.round((correct / results.length) * 100)}% accuracy
+          正確率 {Math.round((correct / results.length) * 100)}%
         </p>
         <div className="flex gap-3 justify-center">
           <Button
@@ -90,10 +90,10 @@ export default function LearnPage({
               setDone(false);
             }}
           >
-            Learn again
+            再學一次
           </Button>
           <Link href={`/decks/${deckId}`}>
-            <Button variant="secondary">Back to deck</Button>
+            <Button variant="secondary">返回學習集</Button>
           </Link>
         </div>
       </div>
@@ -124,64 +124,100 @@ export default function LearnPage({
   }
 
   return (
-    <div className="p-6 lg:p-8 max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-4">
-        <Link
-          href={`/decks/${deckId}`}
-          className="text-sm text-[#6A6963] hover:text-[#1A1A1A]"
-        >
-          <i className="fa-solid fa-arrow-left mr-1" /> Back
-        </Link>
-        <h1 className="text-lg font-semibold text-[#1A1A1A] font-[family-name:var(--font-ui)]">
-          Learn
-        </h1>
-        <span className="text-sm text-[#9A9A94]">
+    <div className="flex flex-col h-full">
+      {/* Top bar */}
+      <div className="flex items-center justify-between h-14 px-4 lg:px-6 bg-white border-b border-[#E8DDD0] shrink-0">
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/decks/${deckId}`}
+            className="text-[#6A6963] hover:text-[#1A1A1A] transition-colors"
+          >
+            <i className="fa-solid fa-xmark text-lg" />
+          </Link>
+          <span className="font-semibold text-[#1A1A1A]">學習模式</span>
+        </div>
+        <div className="hidden sm:block w-[300px]">
+          <ProgressBar value={current + 1} max={items.length} />
+        </div>
+        <span className="font-mono text-sm text-[#6A6963]">
           {current + 1} / {items.length}
         </span>
       </div>
 
-      <ProgressBar value={current + 1} max={items.length} className="mb-6" />
-
-      <div className="rounded-xl border border-[#E8DDD0] bg-white p-6 mb-6">
-        <p className="text-sm text-[#9A9A94] mb-2">What is the definition of:</p>
-        <p className="font-[family-name:var(--font-display)] text-2xl font-medium text-[#1A1A1A]">
-          {q.card.term}
-        </p>
+      {/* Mobile progress bar */}
+      <div className="sm:hidden">
+        <ProgressBar value={current + 1} max={items.length} />
       </div>
 
-      <div className="space-y-3">
-        {q.options.map((option, i) => {
-          let style = "border-[#E8DDD0] bg-white hover:border-[#D4AF37]";
-          if (selected) {
-            if (option === q.card.definition) {
-              style = "border-[#2D6A4F] bg-[#2D6A4F10]";
-            } else if (option === selected) {
-              style = "border-[#8B0000] bg-[#8B000010]";
-            } else {
-              style = "border-[#E8DDD0] bg-[#EADCC5]/30 opacity-50";
-            }
-          }
+      {/* Body */}
+      <div className="flex-1 flex flex-col items-center justify-center px-5 lg:px-20 py-6 lg:py-10">
+        <div className="w-full max-w-[700px] rounded-xl border border-[#D5C8B2] bg-white p-6 lg:p-8 space-y-6">
+          {/* Question label */}
+          <span className="text-xs font-semibold tracking-wider text-[#D4AF37] uppercase">
+            定義
+          </span>
 
-          return (
+          {/* Term */}
+          <p className="font-[family-name:var(--font-display)] text-2xl lg:text-[28px] font-semibold text-[#1A1A1A]">
+            {q.card.term}
+          </p>
+
+          {/* Speaker icon */}
+          <button className="text-[#8B7355] hover:text-[#1A1A1A] transition-colors">
+            <i className="fa-solid fa-volume-high text-lg" />
+          </button>
+
+          {/* Instruction */}
+          <p className="text-sm font-medium text-[#1A1A1A]">選擇正確的詞語</p>
+
+          {/* Options */}
+          <div className="space-y-3">
+            {q.options.map((option, i) => {
+              let style =
+                "border-[#D5C8B2] bg-white hover:border-[#D4AF37] cursor-pointer";
+              if (selected) {
+                if (option === q.card.definition) {
+                  style = "border-[#2BAC6E] bg-[#E8F5EE] border-2";
+                } else if (option === selected) {
+                  style = "border-[#E85D3A] bg-[#FFF3EE] border-2";
+                } else {
+                  style = "border-[#D5C8B2] bg-white opacity-40";
+                }
+              }
+
+              return (
+                <button
+                  key={i}
+                  onClick={() => handleSelect(option)}
+                  disabled={!!selected}
+                  className={`w-full flex items-center rounded-full border px-4 h-12 text-sm text-[#1A1A1A] transition-all ${style}`}
+                >
+                  {option}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Don't know link */}
+          {!selected && (
             <button
-              key={i}
-              onClick={() => handleSelect(option)}
-              disabled={!!selected}
-              className={`w-full text-left rounded-xl border p-4 text-sm transition-colors ${style}`}
+              onClick={() => handleSelect("")}
+              className="text-sm font-medium text-[#D4AF37] hover:underline"
             >
-              {option}
+              不知道嗎？
             </button>
-          );
-        })}
-      </div>
+          )}
 
-      {selected && (
-        <div className="mt-4 text-center">
-          <Button onClick={handleNext}>
-            {current < items.length - 1 ? "Next" : "See results"}
-          </Button>
+          {/* Next button */}
+          {selected && (
+            <div className="text-center pt-2">
+              <Button onClick={handleNext}>
+                {current < items.length - 1 ? "下一題" : "查看結果"}
+              </Button>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

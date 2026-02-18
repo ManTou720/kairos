@@ -1,8 +1,27 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-ui);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-display);
+
+  --color-bg-page: #EADCC5;
+  --color-bg-card: #FFFFFF;
+  --color-bg-sidebar: #0D2275;
+  --color-bg-sidebar-active: #1A2D8A;
+  --color-primary: #D4AF37;
+  --color-primary-hover: #C9A02E;
+  --color-foreground: #1A1A1A;
+  --color-foreground-secondary: #6A6963;
+  --color-foreground-tertiary: #9A9A94;
+  --color-border: #D5C8B2;
+  --color-border-light: #E8DDD0;
+  --color-success: #2D6A4F;
+  --color-error: #8B0000;
+
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
 }
 
 /* Flashcard 3D flip */
@@ -26,4 +45,17 @@
 
 .flip-card-back {
   transform: rotateY(180deg);
+}
+
+/* Shake animation for match errors */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
 }

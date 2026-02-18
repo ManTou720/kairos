@@ -4,10 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const tabs = [
-  { href: "/", icon: "house", label: "Home" },
-  { href: "/search", icon: "magnifying-glass", label: "Search" },
-  { href: "/decks/new", icon: "plus", label: "Create" },
-  { href: "/library", icon: "folder-open", label: "Library" },
+  { href: "/", icon: "house", label: "首頁" },
+  { href: "/search", icon: "magnifying-glass", label: "搜尋" },
+  { href: "/library", icon: "book-open", label: "圖書室" },
+  { href: "/folders", icon: "user", label: "帳號" },
 ];
 
 export default function BottomTabBar() {

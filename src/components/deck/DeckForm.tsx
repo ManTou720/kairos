@@ -82,9 +82,9 @@ export default function DeckForm({ deck }: DeckFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <Input
-          label="Title"
+          label="標題"
           id="title"
-          placeholder="Enter deck title"
+          placeholder="輸入學習集標題"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
@@ -93,12 +93,12 @@ export default function DeckForm({ deck }: DeckFormProps) {
             htmlFor="description"
             className="block text-sm font-medium text-[#1A1A1A] mb-1"
           >
-            Description
+            說明
           </label>
           <textarea
             id="description"
             rows={2}
-            placeholder="Add a description (optional)"
+            placeholder="新增說明（選填）"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full rounded-lg border border-[#D5C8B2] bg-white px-3 py-2 text-sm text-[#1A1A1A] placeholder:text-[#9A9A94] focus:border-[#D4AF37] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
@@ -109,11 +109,8 @@ export default function DeckForm({ deck }: DeckFormProps) {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium text-[#1A1A1A]">
-            Cards ({validCount} valid)
+            卡片（{validCount} 張有效）
           </h3>
-          <Button type="button" variant="ghost" size="sm" onClick={addCard}>
-            + Add card
-          </Button>
         </div>
         {cards.map((card, i) => (
           <CardRow
@@ -126,14 +123,26 @@ export default function DeckForm({ deck }: DeckFormProps) {
             canRemove={cards.length > 1}
           />
         ))}
+        <button
+          type="button"
+          onClick={addCard}
+          className="w-full rounded-lg border border-dashed border-[#D5C8B2] py-3 text-sm font-medium text-[#D4AF37] hover:bg-[#D4AF3710] transition-colors"
+        >
+          <i className="fa-solid fa-plus mr-2" />
+          新增詞語
+        </button>
       </div>
 
       <div className="flex gap-3">
         <Button type="submit" disabled={!title.trim() || validCount < 1 || submitting}>
-          {submitting ? "Saving..." : deck ? "Save changes" : "Create deck"}
+          {submitting
+            ? "儲存中..."
+            : deck
+              ? "儲存變更"
+              : "建立"}
         </Button>
         <Button type="button" variant="secondary" onClick={() => router.back()}>
-          Cancel
+          取消
         </Button>
       </div>
     </form>

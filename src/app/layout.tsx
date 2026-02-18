@@ -1,14 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
 import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import AppShell from "@/components/layout/AppShell";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -27,7 +22,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Kairos - Flashcard App",
+  title: "Kairos - 掌握時機，掌握語言",
   description: "Open source flashcard webapp for effective learning",
 };
 
@@ -37,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="zh-TW">
       <head>
         <link
           rel="stylesheet"
@@ -45,7 +40,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} ${inter.variable} antialiased`}
+        className={`${cormorant.variable} ${inter.variable} ${geistMono.variable} antialiased font-[family-name:var(--font-ui)]`}
       >
         <AuthProvider>
           <AppShell>{children}</AppShell>

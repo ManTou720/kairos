@@ -30,21 +30,35 @@ export default function EditDeckPage({
     return (
       <div className="text-center py-16">
         <h2 className="text-lg font-semibold text-[#1A1A1A] mb-2">
-          Deck not found
+          找不到學習集
         </h2>
         <Link href="/">
-          <Button variant="secondary">Back to home</Button>
+          <Button variant="secondary">返回首頁</Button>
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="p-6 lg:p-8 max-w-2xl">
-      <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold text-[#1A1A1A] mb-6">
-        Edit Deck
-      </h1>
-      <DeckForm deck={deck} />
+    <div className="flex flex-col h-full">
+      {/* Top bar */}
+      <div className="flex items-center justify-between h-14 px-4 lg:px-6 bg-white border-b border-[#E8DDD0] shrink-0">
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/decks/${deckId}`}
+            className="text-[#6A6963] hover:text-[#1A1A1A] transition-colors"
+          >
+            <i className="fa-solid fa-xmark text-lg" />
+          </Link>
+          <span className="font-semibold text-[#1A1A1A]">編輯學習集</span>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-6 lg:p-8 max-w-2xl">
+          <DeckForm deck={deck} />
+        </div>
+      </div>
     </div>
   );
 }

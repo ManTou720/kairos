@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { mutate } from "swr";
 import { useFolders } from "@/hooks/useDecks";
 import * as api from "@/lib/api";
@@ -10,9 +11,17 @@ import Modal from "@/components/ui/Modal";
 
 export default function FoldersPage() {
   const { data: folders, isLoading } = useFolders();
+  const searchParams = useSearchParams();
   const [showCreate, setShowCreate] = useState(false);
   const [folderName, setFolderName] = useState("");
+  const [folderDesc, setFolderDesc] = useState("");
   const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("create") === "1") {
+      setShowCreate(true);
+    }
+  }, [searchParams]);
 
   if (isLoading) {
     return (
@@ -34,6 +43,7 @@ export default function FoldersPage() {
       await api.createFolder(folderName.trim());
       mutate("/api/folders");
       setFolderName("");
+      setFolderDesc("");
       setShowCreate(false);
     } catch {
       // handle error
@@ -46,10 +56,10 @@ export default function FoldersPage() {
     <div className="p-6 lg:p-8 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-[family-name:var(--font-display)] text-[28px] font-bold text-[#1A1A1A]">
-          Folders
+          文件夾
         </h1>
         <Button onClick={() => setShowCreate(true)}>
-          <i className="fa-solid fa-folder-plus mr-2" /> New Folder
+          <i className="fa-solid fa-folder-plus mr-2" /> 新文件夾
         </Button>
       </div>
 
@@ -57,9 +67,9 @@ export default function FoldersPage() {
         {(folders || []).length === 0 ? (
           <div className="text-center py-12 rounded-xl border border-[#E8DDD0] bg-white">
             <i className="fa-solid fa-folder-open text-3xl text-[#D5C8B2] mb-3" />
-            <p className="text-[#6A6963]">No folders yet</p>
+            <p className="text-[#6A6963]">還沒有文件夾</p>
             <p className="text-sm text-[#9A9A94] mt-1">
-              Create a folder to organize your sets.
+              建立文件夾來整理你的學習集。
             </p>
           </div>
         ) : (
@@ -76,7 +86,7 @@ export default function FoldersPage() {
                     {folder.name}
                   </h3>
                   <p className="text-xs text-[#9A9A94] mt-0.5">
-                    {folder.deckCount} sets
+                    {folder.deckCount} 個學習集
                   </p>
                 </div>
               </div>
@@ -89,33 +99,54 @@ export default function FoldersPage() {
       <Modal
         open={showCreate}
         onClose={() => setShowCreate(false)}
-        title="Create Folder"
+        title="建立新文件夾"
       >
         <div className="space-y-4">
+          <div className="flex justify-center mb-2">
+            <div className="w-16 h-16 rounded-2xl bg-[#D4AF3720] flex items-center justify-center">
+              <i className="fa-solid fa-folder text-[#D4AF37] text-2xl" />
+            </div>
+          </div>
           <div>
             <label
               htmlFor="folderName"
               className="block text-sm font-medium text-[#1A1A1A] mb-1"
             >
-              Folder Name
+              文件夾名稱
             </label>
             <input
               id="folderName"
               type="text"
               autoFocus
-              placeholder="Enter folder name"
+              placeholder="輸入文件夾名稱"
               value={folderName}
               onChange={(e) => setFolderName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleCreate()}
               className="w-full rounded-lg border border-[#D5C8B2] bg-white px-3 py-2 text-sm text-[#1A1A1A] placeholder:text-[#9A9A94] focus:border-[#D4AF37] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
             />
           </div>
+          <div>
+            <label
+              htmlFor="folderDesc"
+              className="block text-sm font-medium text-[#1A1A1A] mb-1"
+            >
+              說明
+            </label>
+            <textarea
+              id="folderDesc"
+              rows={2}
+              placeholder="新增說明（選填）"
+              value={folderDesc}
+              onChange={(e) => setFolderDesc(e.target.value)}
+              className="w-full rounded-lg border border-[#D5C8B2] bg-white px-3 py-2 text-sm text-[#1A1A1A] placeholder:text-[#9A9A94] focus:border-[#D4AF37] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+            />
+          </div>
           <div className="flex gap-3 justify-end">
             <Button variant="secondary" onClick={() => setShowCreate(false)}>
-              Cancel
+              取消
             </Button>
             <Button onClick={handleCreate} disabled={!folderName.trim() || creating}>
-              {creating ? "Creating..." : "Create"}
+              {creating ? "建立中..." : "建立"}
             </Button>
           </div>
         </div>

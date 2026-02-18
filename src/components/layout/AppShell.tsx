@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,6 +12,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const isLoginPage = pathname === "/login";
 
@@ -23,6 +25,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       router.replace("/");
     }
   }, [user, loading, isLoginPage, router]);
+
+  // Close sidebar on route change
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
 
   if (loading) {
     return (
@@ -42,9 +49,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-[#EADCC5]">
-      <Sidebar />
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-h-screen">
-        <NavBar />
+        <NavBar onMenuToggle={() => setSidebarOpen((o) => !o)} />
         <main className="flex-1 pb-16 lg:pb-0">{children}</main>
         <BottomTabBar />
       </div>

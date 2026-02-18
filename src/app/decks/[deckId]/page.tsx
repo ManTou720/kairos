@@ -45,10 +45,10 @@ export default function DeckDetailPage({
     return (
       <div className="text-center py-16">
         <h2 className="text-lg font-semibold text-[#1A1A1A] mb-2">
-          Deck not found
+          找不到學習集
         </h2>
         <Link href="/">
-          <Button variant="secondary">Back to home</Button>
+          <Button variant="secondary">返回首頁</Button>
         </Link>
       </div>
     );
@@ -64,31 +64,27 @@ export default function DeckDetailPage({
 
   const modes = [
     {
-      name: "Flashcards",
+      name: "單詞卡",
       href: `/decks/${deckId}/flashcards`,
       min: 1,
-      color: "bg-[#D4AF3720]",
       icon: "fa-clone",
     },
     {
-      name: "Learn",
+      name: "學習",
       href: `/decks/${deckId}/learn`,
       min: MIN_CARDS_FOR_LEARN,
-      color: "bg-[#0D227520]",
       icon: "fa-graduation-cap",
     },
     {
-      name: "Test",
+      name: "測試",
       href: `/decks/${deckId}/test`,
       min: MIN_CARDS_FOR_TEST,
-      color: "bg-[#2D6A4F20]",
       icon: "fa-file-pen",
     },
     {
-      name: "Match",
+      name: "配對",
       href: `/decks/${deckId}/match`,
       min: MIN_CARDS_FOR_MATCH,
-      color: "bg-[#8B000020]",
       icon: "fa-link",
     },
   ];
@@ -106,49 +102,55 @@ export default function DeckDetailPage({
               <p className="text-[#6A6963] mt-1">{deck.description}</p>
             )}
             <div className="flex items-center gap-3 mt-2 text-sm text-[#9A9A94]">
-              <span>{cardCount} cards</span>
+              <span>{cardCount} 張卡片</span>
               <span>&middot;</span>
-              <span>Updated {formatDate(deck.updatedAt)}</span>
+              <span>更新於 {formatDate(deck.updatedAt)}</span>
             </div>
           </div>
           <div className="flex gap-2 shrink-0">
             <Link href={`/decks/${deckId}/edit`}>
-              <Button variant="secondary" size="sm">Edit</Button>
+              <Button variant="secondary" size="sm">
+                <i className="fa-solid fa-pen mr-1" /> 編輯
+              </Button>
             </Link>
             <Button
               variant="danger"
               size="sm"
               onClick={() => setShowDelete(true)}
             >
-              Delete
+              刪除
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Study Modes */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Language selector placeholder */}
+      <div className="flex items-center gap-2 text-sm text-[#6A6963]">
+        <span className="px-3 py-1.5 rounded-lg border border-[#D5C8B2] bg-white">義大利文</span>
+        <i className="fa-solid fa-arrow-right text-[#9A9A94]" />
+        <span className="px-3 py-1.5 rounded-lg border border-[#D5C8B2] bg-white">中文</span>
+      </div>
+
+      {/* Study Modes - horizontal tab row */}
+      <div className="flex gap-2 overflow-x-auto pb-1">
         {modes.map((mode) => {
           const disabled = cardCount < mode.min;
           return disabled ? (
             <div
               key={mode.name}
-              className={`rounded-xl ${mode.color} p-5 opacity-40`}
+              className="flex items-center gap-2 rounded-lg border border-[#E8DDD0] bg-white px-4 py-2.5 text-sm text-[#9A9A94] opacity-50 shrink-0"
             >
-              <i className={`fa-solid ${mode.icon} text-xl mb-2 text-[#1A1A1A]`} />
-              <h3 className="font-semibold text-[#1A1A1A]">{mode.name}</h3>
-              <p className="text-xs text-[#6A6963] mt-1">
-                Min {mode.min} cards
-              </p>
+              <i className={`fa-solid ${mode.icon}`} />
+              <span>{mode.name}</span>
             </div>
           ) : (
             <Link
               key={mode.name}
               href={mode.href}
-              className={`rounded-xl ${mode.color} p-5 transition-shadow hover:shadow-md`}
+              className="flex items-center gap-2 rounded-lg border border-[#D4AF37] bg-[#D4AF3710] px-4 py-2.5 text-sm font-medium text-[#1A1A1A] hover:bg-[#D4AF3720] transition-colors shrink-0"
             >
-              <i className={`fa-solid ${mode.icon} text-xl mb-2 text-[#1A1A1A]`} />
-              <h3 className="font-semibold text-[#1A1A1A]">{mode.name}</h3>
+              <i className={`fa-solid ${mode.icon} text-[#D4AF37]`} />
+              <span>{mode.name}</span>
             </Link>
           );
         })}
@@ -157,11 +159,16 @@ export default function DeckDetailPage({
       {/* Preview Flashcard */}
       {deck.cards[0] && (
         <section>
-          <h2 className="text-base font-semibold text-[#1A1A1A] mb-3 font-[family-name:var(--font-ui)]">
-            Preview
-          </h2>
-          <div className="rounded-2xl border border-[#E8DDD0] bg-white p-8 text-center max-w-xl">
-            <p className="font-[family-name:var(--font-display)] text-3xl text-[#1A1A1A]">
+          <div className="rounded-2xl border border-[#E8DDD0] bg-white p-8 max-w-xl relative">
+            <div className="absolute top-4 right-4 flex gap-2">
+              <button className="text-[#9A9A94] hover:text-[#D4AF37] transition-colors">
+                <i className="fa-solid fa-volume-high" />
+              </button>
+              <button className="text-[#9A9A94] hover:text-[#D4AF37] transition-colors">
+                <i className="fa-regular fa-star" />
+              </button>
+            </div>
+            <p className="font-[family-name:var(--font-display)] text-3xl text-[#1A1A1A] text-center">
               {deck.cards[0].term}
             </p>
           </div>
@@ -171,8 +178,8 @@ export default function DeckDetailPage({
       {/* Cards List */}
       <section>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-semibold text-[#1A1A1A] font-[family-name:var(--font-ui)]">
-            Words ({cardCount})
+          <h2 className="text-base font-semibold text-[#1A1A1A]">
+            本學習集中的詞語 ({cardCount})
           </h2>
         </div>
         <div className="space-y-2">
@@ -184,9 +191,13 @@ export default function DeckDetailPage({
               <span className="flex-1 font-medium text-sm text-[#1A1A1A]">
                 {card.term}
               </span>
+              <div className="w-px h-6 bg-[#E8DDD0] mx-4" />
               <span className="flex-1 text-sm text-[#6A6963]">
                 {card.definition}
               </span>
+              <button className="ml-3 text-[#9A9A94] hover:text-[#D4AF37] transition-colors">
+                <i className="fa-solid fa-volume-high text-sm" />
+              </button>
             </div>
           ))}
         </div>
@@ -195,18 +206,17 @@ export default function DeckDetailPage({
       <Modal
         open={showDelete}
         onClose={() => setShowDelete(false)}
-        title="Delete deck?"
+        title="刪除學習集？"
       >
         <p className="text-sm text-[#6A6963] mb-4">
-          This will permanently delete &quot;{deck.title}&quot; and all its
-          cards.
+          這將永久刪除「{deck.title}」和所有卡片。
         </p>
         <div className="flex gap-3 justify-end">
           <Button variant="secondary" onClick={() => setShowDelete(false)}>
-            Cancel
+            取消
           </Button>
           <Button variant="danger" onClick={handleDelete}>
-            Delete
+            刪除
           </Button>
         </div>
       </Modal>
