@@ -29,6 +29,34 @@ npm run db:push      # Push schema directly to database
 docker-compose up    # PostgreSQL + backend + frontend
 ```
 
+## Design-Driven Development Workflow
+
+The source of truth for all UI is the design file `layout.pen` (read via Pencil MCP tools, NOT with Read/Grep). Frontend pages must be implemented to match the design mockups.
+
+### Workflow
+
+1. **Before coding a page:** Read the corresponding mockup from `layout.pen` using `batch_get` and `get_screenshot` to understand the intended layout, spacing, colors, and components.
+2. **If the design has issues:** Raise the concern to the user first. After confirmation, fix the design in `layout.pen` before writing any frontend code.
+3. **After coding a page:** Visually verify the implementation against the design mockup using `get_screenshot`. Fix discrepancies.
+
+### Design file structure (`layout.pen`)
+
+**Design system components** (reusable): Button/Primary, Button/Secondary, Button/Ghost, Button/Destructive, IconButton, InputGroup, SearchBar, SidebarItem/Default, SidebarItem/Active, SidebarSectionTitle, Sidebar, NavBar, Card, Tab/Active, Tab/Inactive, TabBar, FlashCard, SetListItem, LanguageSelector, StudyModeCard, ProgressBar, WordRow, MoreDropdown, MobileMoreSheet.
+
+**Page mockups** (each has Desktop 1440px + Mobile 390px variants):
+- 00 - Login
+- 01 - Dashboard
+- 02 - Search Results
+- 03 - Library
+- 04 - Folders
+- 05 - Set Detail
+- 06 - Flashcard Mode
+- 07 - Learn Mode
+- 08 - Test Mode
+- 09 - Match Mode
+- 10 - Create Set
+- 11 - Create Folder
+
 ## Architecture
 
 **Frontend:** Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS 4 + SWR for data fetching.
