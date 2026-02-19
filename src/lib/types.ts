@@ -10,6 +10,8 @@ export interface Card {
   id: string;
   term: string;
   definition: string;
+  termLang?: string | null;
+  defLang?: string | null;
   sr: SpacedRepetition;
 }
 

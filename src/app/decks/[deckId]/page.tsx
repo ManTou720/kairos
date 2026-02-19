@@ -14,6 +14,7 @@ import {
 } from "@/lib/constants";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
+import { useTTS } from "@/hooks/useTTS";
 
 export default function DeckDetailPage({
   params,
@@ -24,6 +25,7 @@ export default function DeckDetailPage({
   const { data: deck, isLoading } = useDeck(deckId);
   const router = useRouter();
   const [showDelete, setShowDelete] = useState(false);
+  const { speak } = useTTS();
 
   if (isLoading) {
     return (
@@ -161,7 +163,7 @@ export default function DeckDetailPage({
         <section>
           <div className="rounded-2xl border border-[#E8DDD0] bg-white p-8 max-w-xl relative">
             <div className="absolute top-4 right-4 flex gap-2">
-              <button className="text-[#9A9A94] hover:text-[#D4AF37] transition-colors">
+              <button onClick={() => speak(deck.cards[0].term, deck.cards[0].termLang)} className="text-[#9A9A94] hover:text-[#D4AF37] transition-colors">
                 <i className="fa-solid fa-volume-high" />
               </button>
               <button className="text-[#9A9A94] hover:text-[#D4AF37] transition-colors">
@@ -195,7 +197,7 @@ export default function DeckDetailPage({
               <span className="flex-1 text-sm text-[#6A6963]">
                 {card.definition}
               </span>
-              <button className="ml-3 text-[#9A9A94] hover:text-[#D4AF37] transition-colors">
+              <button onClick={() => speak(card.term, card.termLang)} className="ml-3 text-[#9A9A94] hover:text-[#D4AF37] transition-colors">
                 <i className="fa-solid fa-volume-high text-sm" />
               </button>
             </div>

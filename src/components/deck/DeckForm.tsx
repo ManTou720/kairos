@@ -30,8 +30,8 @@ export default function DeckForm({ deck }: DeckFormProps) {
       id: c.id,
       term: c.term,
       definition: c.definition,
-      termLang: "auto",
-      defLang: "auto",
+      termLang: c.termLang ?? "auto",
+      defLang: c.defLang ?? "auto",
     })) ?? [
       { term: "", definition: "", termLang: "auto", defLang: "auto" },
       { term: "", definition: "", termLang: "auto", defLang: "auto" },

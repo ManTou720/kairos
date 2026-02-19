@@ -51,4 +51,6 @@ export const cards = pgTable("cards", {
   srRepetitions: integer("sr_repetitions").notNull().default(0),
   srNextReview: bigint("sr_next_review", { mode: "number" }).notNull(),
   srLastReview: bigint("sr_last_review", { mode: "number" }),
+  termLang: text("term_lang"),
+  defLang: text("def_lang"),
 });

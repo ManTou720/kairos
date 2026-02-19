@@ -54,7 +54,7 @@ export async function createDeck(data: {
   title: string;
   description: string;
   folderId?: string;
-  cards: { term: string; definition: string }[];
+  cards: { term: string; definition: string; termLang?: string; defLang?: string }[];
 }): Promise<Deck> {
   return request("/api/decks", {
     method: "POST",
@@ -68,7 +68,7 @@ export async function updateDeck(
     title: string;
     description: string;
     folderId?: string | null;
-    cards: { id?: string; term: string; definition: string }[];
+    cards: { id?: string; term: string; definition: string; termLang?: string; defLang?: string }[];
   }
 ): Promise<Deck> {
   return request(`/api/decks/${id}`, {

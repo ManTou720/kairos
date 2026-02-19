@@ -7,6 +7,7 @@ import { useKeyboard } from "@/hooks/useKeyboard";
 import { shuffle } from "@/lib/utils";
 import { Card } from "@/lib/types";
 import FlashcardCard from "@/components/flashcards/FlashcardCard";
+import { useTTS } from "@/hooks/useTTS";
 
 export default function FlashcardsPage({
   params,
@@ -20,6 +21,7 @@ export default function FlashcardsPage({
   const [cards, setCards] = useState<Card[] | null>(null);
   const [known, setKnown] = useState<Set<string>>(new Set());
   const [learning, setLearning] = useState<Set<string>>(new Set());
+  const { speak } = useTTS();
 
   const displayCards = useMemo(() => {
     if (cards) return cards;
@@ -145,6 +147,9 @@ export default function FlashcardsPage({
             definition={current.definition}
             flipped={flipped}
             onFlip={() => setFlipped((f) => !f)}
+            termLang={current.termLang}
+            defLang={current.defLang}
+            onSpeak={speak}
           />
         </div>
 

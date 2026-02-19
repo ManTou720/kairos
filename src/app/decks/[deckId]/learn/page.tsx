@@ -10,6 +10,7 @@ import { MIN_CARDS_FOR_LEARN } from "@/lib/constants";
 import Button from "@/components/ui/Button";
 import ProgressBar from "@/components/ui/ProgressBar";
 import { Card } from "@/lib/types";
+import { useTTS } from "@/hooks/useTTS";
 
 interface LearnItem {
   card: Card;
@@ -41,6 +42,7 @@ export default function LearnPage({
   const [selected, setSelected] = useState<string | null>(null);
   const [results, setResults] = useState<boolean[]>([]);
   const [done, setDone] = useState(false);
+  const { speak, isSpeaking } = useTTS();
 
   const items = useMemo(() => {
     if (questions) return questions;
@@ -163,7 +165,7 @@ export default function LearnPage({
           </p>
 
           {/* Speaker icon */}
-          <button className="text-[#8B7355] hover:text-[#1A1A1A] transition-colors">
+          <button onClick={() => speak(q.card.term, q.card.termLang)} className={`${isSpeaking ? "text-[#D4AF37]" : "text-[#8B7355]"} hover:text-[#1A1A1A] transition-colors`}>
             <i className="fa-solid fa-volume-high text-lg" />
           </button>
 

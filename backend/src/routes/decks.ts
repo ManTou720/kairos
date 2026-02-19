@@ -54,7 +54,7 @@ router.post("/", async (req: Request, res: Response) => {
 
   if (Array.isArray(cardData) && cardData.length > 0) {
     const cardValues = cardData.map(
-      (c: { term: string; definition: string }, i: number) => ({
+      (c: { term: string; definition: string; termLang?: string; defLang?: string }, i: number) => ({
         id: uuidv4(),
         deckId,
         term: c.term,
@@ -65,6 +65,8 @@ router.post("/", async (req: Request, res: Response) => {
         srRepetitions: 0,
         srNextReview: now,
         srLastReview: null,
+        termLang: c.termLang ?? null,
+        defLang: c.defLang ?? null,
       })
     );
     await db.insert(cards).values(cardValues);
@@ -102,6 +104,8 @@ router.get("/:id", async (req: Request, res: Response) => {
       id: c.id,
       term: c.term,
       definition: c.definition,
+      termLang: c.termLang ?? null,
+      defLang: c.defLang ?? null,
       sr: {
         interval: c.srInterval,
         easeFactor: c.srEaseFactor,
@@ -173,6 +177,8 @@ router.put("/:id", async (req: Request, res: Response) => {
             term: c.term,
             definition: c.definition,
             sortOrder: i,
+            termLang: c.termLang ?? null,
+            defLang: c.defLang ?? null,
           })
           .where(eq(cards.id, c.id));
       } else {
@@ -188,6 +194,8 @@ router.put("/:id", async (req: Request, res: Response) => {
           srRepetitions: 0,
           srNextReview: now,
           srLastReview: null,
+          termLang: c.termLang ?? null,
+          defLang: c.defLang ?? null,
         });
       }
     }
@@ -233,6 +241,8 @@ async function getFullDeck(deckId: string) {
       id: c.id,
       term: c.term,
       definition: c.definition,
+      termLang: c.termLang ?? null,
+      defLang: c.defLang ?? null,
       sr: {
         interval: c.srInterval,
         easeFactor: c.srEaseFactor,
