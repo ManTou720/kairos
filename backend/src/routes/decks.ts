@@ -1,27 +1,44 @@
 import { Router, Request, Response } from "express";
 import { db } from "../db/index.js";
 import { decks, cards } from "../db/schema.js";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { authMiddleware } from "../middleware/auth.js";
+import { deckSummaryColumns } from "../lib/queries.js";
+import { toDeckDto, type DeckRow, type CardRow } from "../types/api.js";
 
 const router = Router();
 router.use(authMiddleware);
+
+interface CardInput {
+  id?: string;
+  term: string;
+  definition: string;
+  termLang?: string;
+  defLang?: string;
+}
+
+function isCardInput(c: unknown): c is CardInput {
+  return (
+    typeof c === "object" &&
+    c !== null &&
+    typeof (c as CardInput).term === "string" &&
+    typeof (c as CardInput).definition === "string"
+  );
+}
+
+function parseCardData(raw: unknown): CardInput[] | null {
+  if (!Array.isArray(raw)) return [];
+  if (!raw.every(isCardInput)) return null;
+  return raw as CardInput[];
+}
 
 // GET /decks — list all decks with card count
 router.get("/", async (req: Request, res: Response) => {
   const userId = req.user!.id;
 
   const result = await db
-    .select({
-      id: decks.id,
-      title: decks.title,
-      description: decks.description,
-      folderId: decks.folderId,
-      createdAt: decks.createdAt,
-      updatedAt: decks.updatedAt,
-      cardCount: sql<number>`(SELECT COUNT(*) FROM cards WHERE cards.deck_id = ${decks.id})`.mapWith(Number),
-    })
+    .select(deckSummaryColumns)
     .from(decks)
     .where(eq(decks.userId, userId))
     .orderBy(decks.updatedAt);
@@ -32,96 +49,93 @@ router.get("/", async (req: Request, res: Response) => {
 // POST /decks — create a deck with cards
 router.post("/", async (req: Request, res: Response) => {
   const userId = req.user!.id;
-  const { title, description, folderId, cards: cardData } = req.body;
+  const { title, description, folderId } = req.body;
 
   if (!title || typeof title !== "string") {
     res.status(400).json({ error: "Title is required" });
     return;
   }
 
+  const cardData = parseCardData(req.body.cards);
+  if (cardData === null) {
+    res.status(400).json({ error: "Invalid card data" });
+    return;
+  }
+
   const now = Date.now();
   const deckId = uuidv4();
 
-  await db.insert(decks).values({
-    id: deckId,
-    userId,
-    folderId: folderId || null,
-    title: title.trim(),
-    description: (description || "").trim(),
-    createdAt: now,
-    updatedAt: now,
+  const newCards: CardRow[] = cardData.map((c, i) => ({
+    id: uuidv4(),
+    deckId,
+    term: c.term,
+    definition: c.definition,
+    sortOrder: i,
+    srInterval: 0,
+    srEaseFactor: 2.5,
+    srRepetitions: 0,
+    srNextReview: now,
+    srLastReview: null,
+    termLang: c.termLang ?? null,
+    defLang: c.defLang ?? null,
+  }));
+
+  // Deck + initial cards are created atomically.
+  const created = await db.transaction(async (tx): Promise<DeckRow> => {
+    const [deck] = await tx
+      .insert(decks)
+      .values({
+        id: deckId,
+        userId,
+        folderId: folderId || null,
+        title: title.trim(),
+        description: (description || "").trim(),
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
+
+    if (newCards.length > 0) {
+      await tx.insert(cards).values(newCards);
+    }
+
+    return deck;
   });
 
-  if (Array.isArray(cardData) && cardData.length > 0) {
-    const cardValues = cardData.map(
-      (c: { term: string; definition: string; termLang?: string; defLang?: string }, i: number) => ({
-        id: uuidv4(),
-        deckId,
-        term: c.term,
-        definition: c.definition,
-        sortOrder: i,
-        srInterval: 0,
-        srEaseFactor: 2.5,
-        srRepetitions: 0,
-        srNextReview: now,
-        srLastReview: null,
-        termLang: c.termLang ?? null,
-        defLang: c.defLang ?? null,
-      })
-    );
-    await db.insert(cards).values(cardValues);
-  }
-
-  // Return full deck with cards
-  const deck = await getFullDeck(deckId);
-  res.status(201).json(deck);
+  res.status(201).json(toDeckDto(created, newCards));
 });
 
 // GET /decks/:id — get deck with all cards
 router.get("/:id", async (req: Request, res: Response) => {
   const userId = req.user!.id;
-  const deck = await db
-    .select()
-    .from(decks)
-    .where(and(eq(decks.id, req.params.id as string), eq(decks.userId, userId)))
-    .limit(1)
-    .then((rows) => rows[0]);
 
-  if (!deck) {
+  const [deck, owned] = await getOwnedDeckWithCards(
+    req.params.id as string,
+    userId
+  );
+  if (!owned) {
     res.status(404).json({ error: "Deck not found" });
     return;
   }
 
-  const deckCards = await db
-    .select()
-    .from(cards)
-    .where(eq(cards.deckId, deck.id))
-    .orderBy(cards.sortOrder);
-
-  res.json({
-    ...deck,
-    cards: deckCards.map((c) => ({
-      id: c.id,
-      term: c.term,
-      definition: c.definition,
-      termLang: c.termLang ?? null,
-      defLang: c.defLang ?? null,
-      sr: {
-        interval: c.srInterval,
-        easeFactor: c.srEaseFactor,
-        repetitions: c.srRepetitions,
-        nextReview: c.srNextReview,
-        lastReview: c.srLastReview,
-      },
-    })),
-  });
+  res.json(toDeckDto(deck!, owned));
 });
 
 // PUT /decks/:id — update deck and cards
 router.put("/:id", async (req: Request, res: Response) => {
   const userId = req.user!.id;
   const deckId = req.params.id as string;
-  const { title, description, folderId, cards: cardData } = req.body;
+  const { title, description, folderId } = req.body;
+
+  let cardData: CardInput[] | undefined;
+  if (req.body.cards !== undefined) {
+    const parsed = parseCardData(req.body.cards);
+    if (parsed === null) {
+      res.status(400).json({ error: "Invalid card data" });
+      return;
+    }
+    cardData = parsed;
+  }
 
   const existing = await db
     .select()
@@ -137,72 +151,81 @@ router.put("/:id", async (req: Request, res: Response) => {
 
   const now = Date.now();
 
-  await db
-    .update(decks)
-    .set({
-      title: title?.trim() ?? existing.title,
-      description: description?.trim() ?? existing.description,
-      folderId: folderId !== undefined ? folderId || null : existing.folderId,
-      updatedAt: now,
-    })
-    .where(eq(decks.id, deckId));
+  const updated = await db.transaction(async (tx): Promise<DeckRow> => {
+    const [deck] = await tx
+      .update(decks)
+      .set({
+        title: title?.trim() ?? existing.title,
+        description: description?.trim() ?? existing.description,
+        folderId: folderId !== undefined ? folderId || null : existing.folderId,
+        updatedAt: now,
+      })
+      .where(eq(decks.id, deckId))
+      .returning();
 
-  // If cards provided, diff update
-  if (Array.isArray(cardData)) {
-    const existingCards = await db
-      .select()
-      .from(cards)
-      .where(eq(cards.deckId, deckId));
+    // Diff-update cards atomically: delete removed, upsert the rest.
+    if (cardData !== undefined) {
+      const existingCards = await tx
+        .select({ id: cards.id })
+        .from(cards)
+        .where(eq(cards.deckId, deckId));
 
-    const existingCardMap = new Map(existingCards.map((c) => [c.id, c]));
-    const newCardIds = new Set(
-      cardData.filter((c: { id?: string }) => c.id).map((c: { id: string }) => c.id)
-    );
+      const incomingIds = new Set(
+        cardData.filter((c) => c.id).map((c) => c.id as string)
+      );
+      const removedIds = existingCards
+        .filter((c) => !incomingIds.has(c.id))
+        .map((c) => c.id);
 
-    // Delete removed cards
-    for (const ec of existingCards) {
-      if (!newCardIds.has(ec.id)) {
-        await db.delete(cards).where(eq(cards.id, ec.id));
+      if (removedIds.length > 0) {
+        await tx.delete(cards).where(inArray(cards.id, removedIds));
       }
-    }
 
-    // Upsert cards
-    for (let i = 0; i < cardData.length; i++) {
-      const c = cardData[i];
-      if (c.id && existingCardMap.has(c.id)) {
-        // Update existing card (preserve SR data)
-        await db
-          .update(cards)
-          .set({
+      const existingIds = new Set(existingCards.map((c) => c.id));
+      for (let i = 0; i < cardData.length; i++) {
+        const c = cardData[i];
+        if (c.id && existingIds.has(c.id)) {
+          // Update existing card (preserve SR data)
+          await tx
+            .update(cards)
+            .set({
+              term: c.term,
+              definition: c.definition,
+              sortOrder: i,
+              termLang: c.termLang ?? null,
+              defLang: c.defLang ?? null,
+            })
+            .where(eq(cards.id, c.id));
+        } else {
+          // Insert new card
+          await tx.insert(cards).values({
+            id: uuidv4(),
+            deckId,
             term: c.term,
             definition: c.definition,
             sortOrder: i,
+            srInterval: 0,
+            srEaseFactor: 2.5,
+            srRepetitions: 0,
+            srNextReview: now,
+            srLastReview: null,
             termLang: c.termLang ?? null,
             defLang: c.defLang ?? null,
-          })
-          .where(eq(cards.id, c.id));
-      } else {
-        // Insert new card
-        await db.insert(cards).values({
-          id: uuidv4(),
-          deckId,
-          term: c.term,
-          definition: c.definition,
-          sortOrder: i,
-          srInterval: 0,
-          srEaseFactor: 2.5,
-          srRepetitions: 0,
-          srNextReview: now,
-          srLastReview: null,
-          termLang: c.termLang ?? null,
-          defLang: c.defLang ?? null,
-        });
+          });
+        }
       }
     }
-  }
 
-  const deck = await getFullDeck(deckId);
-  res.json(deck);
+    return deck;
+  });
+
+  const deckCards = await db
+    .select()
+    .from(cards)
+    .where(eq(cards.deckId, deckId))
+    .orderBy(cards.sortOrder);
+
+  res.json(toDeckDto(updated, deckCards));
 });
 
 // DELETE /decks/:id
@@ -221,13 +244,19 @@ router.delete("/:id", async (req: Request, res: Response) => {
   res.json({ success: true });
 });
 
-async function getFullDeck(deckId: string) {
+/** Load a deck + its cards after verifying ownership. */
+async function getOwnedDeckWithCards(
+  deckId: string,
+  userId: string
+): Promise<[DeckRow | null, CardRow[]]> {
   const deck = await db
     .select()
     .from(decks)
-    .where(eq(decks.id, deckId))
+    .where(and(eq(decks.id, deckId), eq(decks.userId, userId)))
     .limit(1)
-    .then((rows) => rows[0]);
+    .then((rows) => rows[0] ?? null);
+
+  if (!deck) return [null, []];
 
   const deckCards = await db
     .select()
@@ -235,23 +264,7 @@ async function getFullDeck(deckId: string) {
     .where(eq(cards.deckId, deckId))
     .orderBy(cards.sortOrder);
 
-  return {
-    ...deck,
-    cards: deckCards.map((c) => ({
-      id: c.id,
-      term: c.term,
-      definition: c.definition,
-      termLang: c.termLang ?? null,
-      defLang: c.defLang ?? null,
-      sr: {
-        interval: c.srInterval,
-        easeFactor: c.srEaseFactor,
-        repetitions: c.srRepetitions,
-        nextReview: c.srNextReview,
-        lastReview: c.srLastReview,
-      },
-    })),
-  };
+  return [deck, deckCards];
 }
 
 export default router;

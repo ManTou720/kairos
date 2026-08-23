@@ -1,8 +1,9 @@
 import { Router, Request, Response } from "express";
 import { db } from "../db/index.js";
-import { decks, cards } from "../db/schema.js";
+import { decks } from "../db/schema.js";
 import { eq, and, or, ilike, sql } from "drizzle-orm";
 import { authMiddleware } from "../middleware/auth.js";
+import { deckSummaryColumns } from "../lib/queries.js";
 
 const router = Router();
 router.use(authMiddleware);
@@ -21,15 +22,7 @@ router.get("/", async (req: Request, res: Response) => {
 
   // Find decks that match by title or have cards matching term/definition
   const matchingDecks = await db
-    .select({
-      id: decks.id,
-      title: decks.title,
-      description: decks.description,
-      folderId: decks.folderId,
-      createdAt: decks.createdAt,
-      updatedAt: decks.updatedAt,
-      cardCount: sql<number>`(SELECT COUNT(*) FROM cards WHERE cards.deck_id = ${decks.id})`.mapWith(Number),
-    })
+    .select(deckSummaryColumns)
     .from(decks)
     .where(
       and(

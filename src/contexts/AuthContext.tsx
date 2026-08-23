@@ -30,17 +30,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     const token = getToken();
     if (!token) {
-      setLoading(false);
-      return;
+      // Nothing to verify — finish asynchronously so we never call
+      // setState synchronously inside the effect body.
+      const id = setTimeout(() => setLoading(false), 0);
+      return () => clearTimeout(id);
     }
 
     api
       .getMe()
-      .then((data) => setUser(data.user))
-      .catch(() => removeToken())
-      .finally(() => setLoading(false));
+      .then((data) => {
+        if (!cancelled) setUser(data.user);
+      })
+      .catch(() => {
+        if (!cancelled) removeToken();
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const login = useCallback(async (username: string) => {

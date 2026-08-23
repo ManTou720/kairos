@@ -1,4 +1,4 @@
-import { Card, TestQuestion, TestConfig, QuestionType } from "./types";
+import { Card, TestQuestion, TestConfig } from "./types";
 import { generateId, shuffle } from "./utils";
 
 function generateMultipleChoice(card: Card, allCards: Card[]): TestQuestion {
@@ -75,8 +75,4 @@ export function generateTest(
   }
 
   return shuffle(questions);
-}
-
-export function gradeWritten(userAnswer: string, correctAnswer: string): boolean {
-  return userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
 }

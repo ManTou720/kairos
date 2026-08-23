@@ -1,22 +1,11 @@
 "use client";
 
-import { use, useState, useEffect, useCallback } from "react";
+import { use } from "react";
 import Link from "next/link";
 import { useDeck } from "@/hooks/useDecks";
-import { useTimer } from "@/hooks/useTimer";
-import { shuffle } from "@/lib/utils";
-import { MIN_CARDS_FOR_MATCH, MAX_MATCH_PAIRS } from "@/lib/constants";
+import { useMatchSession } from "@/features/match/useMatchSession";
+import { MIN_CARDS_FOR_MATCH } from "@/lib/constants";
 import Button from "@/components/ui/Button";
-
-interface MatchItem {
-  id: string;
-  cardId: string;
-  text: string;
-  type: "term" | "definition";
-  matched: boolean;
-}
-
-type Phase = "ready" | "playing" | "done";
 
 export default function MatchPage({
   params,
@@ -25,93 +14,9 @@ export default function MatchPage({
 }) {
   const { deckId } = use(params);
   const { data: deck } = useDeck(deckId);
-  const { elapsed, start, stop, formatTime } = useTimer();
-  const [phase, setPhase] = useState<Phase>("ready");
-  const [terms, setTerms] = useState<MatchItem[]>([]);
-  const [definitions, setDefinitions] = useState<MatchItem[]>([]);
-  const [selectedTerm, setSelectedTerm] = useState<string | null>(null);
-  const [selectedDef, setSelectedDef] = useState<string | null>(null);
-  const [errors, setErrors] = useState(0);
-  const [shakeIds, setShakeIds] = useState<string[]>([]);
-  const [matchedCount, setMatchedCount] = useState(0);
-  const [totalPairs, setTotalPairs] = useState(0);
-
-  const initGame = useCallback(() => {
-    if (!deck) return;
-    const pairs = shuffle(deck.cards).slice(0, MAX_MATCH_PAIRS);
-    const termItems: MatchItem[] = shuffle(
-      pairs.map((c) => ({
-        id: `t-${c.id}`,
-        cardId: c.id,
-        text: c.term,
-        type: "term" as const,
-        matched: false,
-      }))
-    );
-    const defItems: MatchItem[] = shuffle(
-      pairs.map((c) => ({
-        id: `d-${c.id}`,
-        cardId: c.id,
-        text: c.definition,
-        type: "definition" as const,
-        matched: false,
-      }))
-    );
-    setTerms(termItems);
-    setDefinitions(defItems);
-    setSelectedTerm(null);
-    setSelectedDef(null);
-    setErrors(0);
-    setShakeIds([]);
-    setMatchedCount(0);
-    setTotalPairs(pairs.length);
-    setPhase("playing");
-    start();
-  }, [deck, start]);
-
-  // Check for match whenever both sides are selected
-  useEffect(() => {
-    if (!selectedTerm || !selectedDef) return;
-
-    const term = terms.find((t) => t.id === selectedTerm);
-    const def = definitions.find((d) => d.id === selectedDef);
-
-    if (!term || !def) return;
-
-    if (term.cardId === def.cardId) {
-      // Match!
-      setTerms((prev) =>
-        prev.map((t) => (t.id === selectedTerm ? { ...t, matched: true } : t))
-      );
-      setDefinitions((prev) =>
-        prev.map((d) => (d.id === selectedDef ? { ...d, matched: true } : d))
-      );
-      setMatchedCount((c) => c + 1);
-      setSelectedTerm(null);
-      setSelectedDef(null);
-    } else {
-      // Mismatch
-      setErrors((e) => e + 1);
-      setShakeIds([selectedTerm, selectedDef]);
-      setTimeout(() => {
-        setShakeIds([]);
-        setSelectedTerm(null);
-        setSelectedDef(null);
-      }, 500);
-    }
-  }, [selectedTerm, selectedDef, terms, definitions]);
-
-  // Check for completion
-  useEffect(() => {
-    if (
-      phase === "playing" &&
-      totalPairs > 0 &&
-      matchedCount === totalPairs
-    ) {
-      stop();
-      setPhase("done");
-    }
-  }, [matchedCount, totalPairs, phase, stop]);
+  const session = useMatchSession(
+    deck && deck.cards.length >= MIN_CARDS_FOR_MATCH ? deck.cards : undefined
+  );
 
   if (!deck) {
     return <div className="text-center py-12 text-[#9A9A94]">載入中...</div>;
@@ -130,15 +35,8 @@ export default function MatchPage({
     );
   }
 
-  function handleTermClick(item: MatchItem) {
-    if (item.matched || phase !== "playing" || shakeIds.length > 0) return;
-    setSelectedTerm(item.id === selectedTerm ? null : item.id);
-  }
-
-  function handleDefClick(item: MatchItem) {
-    if (item.matched || phase !== "playing" || shakeIds.length > 0) return;
-    setSelectedDef(item.id === selectedDef ? null : item.id);
-  }
+  const { phase, terms, definitions, shakeIds, selectedTerm, selectedDef } =
+    session;
 
   if (phase === "ready") {
     return (
@@ -155,7 +53,7 @@ export default function MatchPage({
         <p className="text-[#6A6963] mb-6">
           盡快將詞語和定義配對！
         </p>
-        <Button size="lg" onClick={initGame}>
+        <Button size="lg" onClick={session.initGame}>
           開始
         </Button>
       </div>
@@ -169,13 +67,13 @@ export default function MatchPage({
           完成！
         </h2>
         <p className="text-lg text-[#6A6963] mb-1">
-          時間：{formatTime(elapsed)}
+          時間：{session.formatTime(session.elapsed)}
         </p>
         <p className="text-[#9A9A94] mb-6">
-          {errors} 次錯誤
+          {session.errors} 次錯誤
         </p>
         <div className="flex gap-3 justify-center">
-          <Button onClick={initGame}>再玩一次</Button>
+          <Button onClick={session.initGame}>再玩一次</Button>
           <Link href={`/decks/${deckId}`}>
             <Button variant="secondary">返回學習集</Button>
           </Link>
@@ -200,11 +98,11 @@ export default function MatchPage({
         <div className="flex items-center gap-2">
           <i className="fa-solid fa-stopwatch text-[#6A6963]" />
           <span className="font-mono text-lg font-semibold text-[#1A1A1A]">
-            {formatTime(elapsed)}
+            {session.formatTime(session.elapsed)}
           </span>
         </div>
         <span className="text-sm text-[#6A6963]">
-          已配對 {matchedCount}/{totalPairs}
+          已配對 {session.matchedCount}/{session.totalPairs}
         </span>
       </div>
 
@@ -233,7 +131,7 @@ export default function MatchPage({
               return (
                 <button
                   key={item.id}
-                  onClick={() => handleTermClick(item)}
+                  onClick={() => session.handleTermClick(item)}
                   disabled={item.matched}
                   className={`rounded-full border h-14 lg:h-14 flex items-center justify-center text-sm lg:text-base text-[#1A1A1A] transition-all ${style}`}
                 >
@@ -266,7 +164,7 @@ export default function MatchPage({
               return (
                 <button
                   key={item.id}
-                  onClick={() => handleDefClick(item)}
+                  onClick={() => session.handleDefClick(item)}
                   disabled={item.matched}
                   className={`rounded-full border h-14 lg:h-14 flex items-center justify-center text-sm lg:text-base text-[#1A1A1A] transition-all ${style}`}
                 >

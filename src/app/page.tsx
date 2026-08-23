@@ -52,7 +52,7 @@ export default function DashboardPage() {
                 <div className="mt-3 flex items-center gap-2 text-xs text-[#9A9A94]">
                   <span>{deck.cardCount} 張卡片</span>
                 </div>
-                <ProgressBar value={Math.floor(Math.random() * deck.cardCount)} max={deck.cardCount} className="mt-3" />
+                <ProgressBar value={deck.learnedCount} max={deck.cardCount} className="mt-3" />
                 <Link
                   href={`/decks/${deck.id}`}
                   className="mt-3 inline-flex items-center rounded-lg bg-[#D4AF37] px-4 py-2 text-sm font-semibold text-[#1A1A1A] hover:bg-[#C9A02E] transition-colors"

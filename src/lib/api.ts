@@ -82,19 +82,14 @@ export async function deleteDeck(id: string): Promise<void> {
 }
 
 // Cards
-export async function updateCardSR(
+// SM-2 is computed server-side; the client only reports the grade.
+export async function reviewCard(
   cardId: string,
-  sr: SpacedRepetition
-): Promise<void> {
-  return request(`/api/cards/${cardId}/sr`, {
-    method: "PATCH",
-    body: JSON.stringify({
-      interval: sr.interval,
-      easeFactor: sr.easeFactor,
-      repetitions: sr.repetitions,
-      nextReview: sr.nextReview,
-      lastReview: sr.lastReview,
-    }),
+  quality: number
+): Promise<{ cardId: string; sr: SpacedRepetition }> {
+  return request(`/api/cards/${cardId}/review`, {
+    method: "POST",
+    body: JSON.stringify({ quality }),
   });
 }
 

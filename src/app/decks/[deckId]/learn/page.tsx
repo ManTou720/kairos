@@ -1,34 +1,13 @@
 "use client";
 
-import { use, useState, useMemo } from "react";
+import { use } from "react";
 import Link from "next/link";
 import { useDeck } from "@/hooks/useDecks";
-import { shuffle } from "@/lib/utils";
-import { calculateSR } from "@/lib/sr";
-import * as api from "@/lib/api";
+import { useLearnSession } from "@/features/learn/useLearnSession";
 import { MIN_CARDS_FOR_LEARN } from "@/lib/constants";
 import Button from "@/components/ui/Button";
 import ProgressBar from "@/components/ui/ProgressBar";
-import { Card } from "@/lib/types";
 import { useTTS } from "@/hooks/useTTS";
-
-interface LearnItem {
-  card: Card;
-  options: string[];
-}
-
-function buildQuestions(cards: Card[]): LearnItem[] {
-  return shuffle(cards).map((card) => {
-    const others = cards.filter((c) => c.id !== card.id);
-    const distractors = shuffle(others)
-      .slice(0, 3)
-      .map((c) => c.definition);
-    return {
-      card,
-      options: shuffle([card.definition, ...distractors]),
-    };
-  });
-}
 
 export default function LearnPage({
   params,
@@ -37,20 +16,10 @@ export default function LearnPage({
 }) {
   const { deckId } = use(params);
   const { data: deck } = useDeck(deckId);
-  const [questions, setQuestions] = useState<LearnItem[] | null>(null);
-  const [current, setCurrent] = useState(0);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [results, setResults] = useState<boolean[]>([]);
-  const [done, setDone] = useState(false);
+  const session = useLearnSession(
+    deck && deck.cards.length >= MIN_CARDS_FOR_LEARN ? deck.cards : undefined
+  );
   const { speak, isSpeaking } = useTTS();
-
-  const items = useMemo(() => {
-    if (questions) return questions;
-    if (!deck || deck.cards.length < MIN_CARDS_FOR_LEARN) return [];
-    const q = buildQuestions(deck.cards);
-    setQuestions(q);
-    return q;
-  }, [questions, deck]);
 
   if (!deck) {
     return <div className="text-center py-12 text-[#9A9A94]">載入中...</div>;
@@ -69,6 +38,8 @@ export default function LearnPage({
     );
   }
 
+  const { items, q, current, selected, results, done } = session;
+
   if (done) {
     const correct = results.filter(Boolean).length;
     return (
@@ -83,17 +54,7 @@ export default function LearnPage({
           正確率 {Math.round((correct / results.length) * 100)}%
         </p>
         <div className="flex gap-3 justify-center">
-          <Button
-            onClick={() => {
-              setQuestions(buildQuestions(deck.cards));
-              setCurrent(0);
-              setSelected(null);
-              setResults([]);
-              setDone(false);
-            }}
-          >
-            再學一次
-          </Button>
+          <Button onClick={session.restart}>再學一次</Button>
           <Link href={`/decks/${deckId}`}>
             <Button variant="secondary">返回學習集</Button>
           </Link>
@@ -102,28 +63,7 @@ export default function LearnPage({
     );
   }
 
-  const q = items[current];
   if (!q) return null;
-
-  function handleSelect(option: string) {
-    if (selected) return;
-    setSelected(option);
-    const isCorrect = option === q.card.definition;
-    setResults((r) => [...r, isCorrect]);
-
-    const quality = isCorrect ? 4 : 1;
-    const newSR = calculateSR(q.card.sr, quality);
-    api.updateCardSR(q.card.id, newSR);
-  }
-
-  function handleNext() {
-    if (current < items.length - 1) {
-      setCurrent((c) => c + 1);
-      setSelected(null);
-    } else {
-      setDone(true);
-    }
-  }
 
   return (
     <div className="flex flex-col h-full">
@@ -190,7 +130,7 @@ export default function LearnPage({
               return (
                 <button
                   key={i}
-                  onClick={() => handleSelect(option)}
+                  onClick={() => session.handleSelect(option)}
                   disabled={!!selected}
                   className={`w-full flex items-center rounded-full border px-4 h-12 text-sm text-[#1A1A1A] transition-all ${style}`}
                 >
@@ -203,7 +143,7 @@ export default function LearnPage({
           {/* Don't know link */}
           {!selected && (
             <button
-              onClick={() => handleSelect("")}
+              onClick={() => session.handleSelect("")}
               className="text-sm font-medium text-[#D4AF37] hover:underline"
             >
               不知道嗎？
@@ -213,7 +153,7 @@ export default function LearnPage({
           {/* Next button */}
           {selected && (
             <div className="text-center pt-2">
-              <Button onClick={handleNext}>
+              <Button onClick={session.handleNext}>
                 {current < items.length - 1 ? "下一題" : "查看結果"}
               </Button>
             </div>

@@ -1,57 +1,18 @@
-export interface SpacedRepetition {
-  interval: number;
-  easeFactor: number;
-  repetitions: number;
-  nextReview: number;
-  lastReview: number | null;
-}
+/**
+ * API types — single source of truth lives in the backend
+ * (backend/src/types/api.ts, derived from the Drizzle schema).
+ * This is a type-only re-export; it is erased at build time.
+ */
+export type {
+  SpacedRepetition,
+  Card,
+  Deck,
+  DeckSummary,
+  User,
+  Folder,
+} from "../../backend/src/types/api";
 
-export interface Card {
-  id: string;
-  term: string;
-  definition: string;
-  termLang?: string | null;
-  defLang?: string | null;
-  sr: SpacedRepetition;
-}
-
-export interface Deck {
-  id: string;
-  title: string;
-  description: string;
-  cards: Card[];
-  folderId?: string | null;
-  createdAt: number;
-  updatedAt: number;
-}
-
-export interface DeckSummary {
-  id: string;
-  title: string;
-  description: string;
-  folderId: string | null;
-  cardCount: number;
-  createdAt: number;
-  updatedAt: number;
-}
-
-export interface User {
-  id: string;
-  username: string;
-}
-
-export interface Folder {
-  id: string;
-  name: string;
-  deckCount: number;
-  createdAt: number;
-  updatedAt: number;
-}
-
-export interface KairosStore {
-  version: 1;
-  decks: Deck[];
-}
+// ---- Test mode (frontend-only concepts) ----
 
 export type QuestionType = "multiple-choice" | "true-false" | "written";
 

@@ -1,14 +1,12 @@
 "use client";
 
-import { use, useState } from "react";
+import { use } from "react";
 import Link from "next/link";
 import { useDeck } from "@/hooks/useDecks";
-import { generateTest, gradeWritten } from "@/lib/test-generator";
+import { useTestSession } from "@/features/test/useTestSession";
 import { MIN_CARDS_FOR_TEST } from "@/lib/constants";
-import { TestQuestion, TestConfig, QuestionType } from "@/lib/types";
+import { QuestionType } from "@/lib/types";
 import Button from "@/components/ui/Button";
-
-type Phase = "config" | "testing" | "results";
 
 const TYPE_LABELS: Record<QuestionType, string> = {
   "multiple-choice": "選擇題",
@@ -23,17 +21,7 @@ export default function TestPage({
 }) {
   const { deckId } = use(params);
   const { data: deck } = useDeck(deckId);
-  const [phase, setPhase] = useState<Phase>("config");
-  const [questions, setQuestions] = useState<TestQuestion[]>([]);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [gradedQuestions, setGradedQuestions] = useState<TestQuestion[]>([]);
-
-  const [selectedTypes, setSelectedTypes] = useState<QuestionType[]>([
-    "multiple-choice",
-    "true-false",
-    "written",
-  ]);
-  const [questionCount, setQuestionCount] = useState(10);
+  const session = useTestSession(deck);
 
   if (!deck) {
     return <div className="text-center py-12 text-[#9A9A94]">載入中...</div>;
@@ -52,40 +40,15 @@ export default function TestPage({
     );
   }
 
-  function startTest() {
-    if (selectedTypes.length === 0) return;
-    const config: TestConfig = {
-      questionTypes: selectedTypes,
-      questionCount: Math.min(questionCount, deck!.cards.length),
-    };
-    const q = generateTest(deck!.cards, config);
-    setQuestions(q);
-    setAnswers({});
-    setPhase("testing");
-  }
-
-  function selectAnswer(questionId: string, answer: string) {
-    setAnswers((prev) => ({ ...prev, [questionId]: answer }));
-  }
-
-  function submitTest() {
-    const graded = questions.map((q) => {
-      const userAnswer = answers[q.id] ?? "";
-      const isCorrect =
-        q.type === "written"
-          ? gradeWritten(userAnswer, q.correctAnswer)
-          : userAnswer === q.correctAnswer;
-      return { ...q, userAnswer, isCorrect };
-    });
-    setGradedQuestions(graded);
-    setPhase("results");
-  }
-
-  function toggleType(type: QuestionType) {
-    setSelectedTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
-    );
-  }
+  const {
+    phase,
+    questions,
+    gradedQuestions,
+    selectedTypes,
+    questionCount,
+    answers,
+    answeredCount: answered,
+  } = session;
 
   // CONFIG PHASE
   if (phase === "config") {
@@ -116,7 +79,7 @@ export default function TestPage({
               {types.map(({ type, label }) => (
                 <button
                   key={type}
-                  onClick={() => toggleType(type)}
+                  onClick={() => session.toggleType(type)}
                   className={`rounded-lg border px-4 py-2 text-sm transition-colors ${
                     selectedTypes.includes(type)
                       ? "border-[#D4AF37] bg-[#D4AF3720] text-[#1A1A1A] font-medium"
@@ -138,7 +101,7 @@ export default function TestPage({
               min={1}
               max={deck.cards.length}
               value={Math.min(questionCount, deck.cards.length)}
-              onChange={(e) => setQuestionCount(Number(e.target.value))}
+              onChange={(e) => session.setQuestionCount(Number(e.target.value))}
               className="w-full accent-[#D4AF37]"
             />
             <p className="text-sm text-[#9A9A94] mt-1">
@@ -147,7 +110,7 @@ export default function TestPage({
           </div>
 
           <Button
-            onClick={startTest}
+            onClick={session.startTest}
             disabled={selectedTypes.length === 0}
             size="lg"
           >
@@ -160,8 +123,6 @@ export default function TestPage({
 
   // TESTING PHASE — single-page scrollable with all questions
   if (phase === "testing") {
-    const answered = Object.keys(answers).length;
-
     return (
       <div className="flex flex-col h-full">
         {/* Top bar */}
@@ -178,7 +139,7 @@ export default function TestPage({
             </span>
           </div>
           <Button
-            onClick={submitTest}
+            onClick={session.submitTest}
             disabled={answered < questions.length}
             size="sm"
           >
@@ -210,7 +171,7 @@ export default function TestPage({
                     type="text"
                     placeholder="在此輸入答案..."
                     value={answers[q.id] ?? ""}
-                    onChange={(e) => selectAnswer(q.id, e.target.value)}
+                    onChange={(e) => session.selectAnswer(q.id, e.target.value)}
                     className="w-full rounded-lg border border-[#D5C8B2] bg-white px-4 py-3 text-sm text-[#1A1A1A] placeholder:text-[#9A9A94] focus:border-[#D4AF37] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
                   />
                 ) : q.type === "true-false" ? (
@@ -218,7 +179,7 @@ export default function TestPage({
                     {q.options!.map((option) => (
                       <button
                         key={option}
-                        onClick={() => selectAnswer(q.id, option)}
+                        onClick={() => session.selectAnswer(q.id, option)}
                         className={`flex-1 rounded-lg border px-4 py-3 text-sm font-medium transition-colors ${
                           answers[q.id] === option
                             ? "border-[#D4AF37] bg-[#D4AF3720] text-[#1A1A1A]"
@@ -234,7 +195,7 @@ export default function TestPage({
                     {q.options!.map((option) => (
                       <button
                         key={option}
-                        onClick={() => selectAnswer(q.id, option)}
+                        onClick={() => session.selectAnswer(q.id, option)}
                         className={`w-full flex items-center gap-2.5 rounded-full border px-4 h-11 text-sm transition-colors ${
                           answers[q.id] === option
                             ? "border-[#D4AF37] bg-[#D4AF3715] text-[#1A1A1A] font-medium border-2"
@@ -273,7 +234,7 @@ export default function TestPage({
             {/* Submit button at bottom */}
             <div className="text-center pt-4 pb-8">
               <Button
-                onClick={submitTest}
+                onClick={session.submitTest}
                 disabled={answered < questions.length}
                 size="lg"
               >
@@ -340,16 +301,7 @@ export default function TestPage({
       </div>
 
       <div className="flex gap-3 justify-center">
-        <Button
-          onClick={() => {
-            setPhase("config");
-            setQuestions([]);
-            setAnswers({});
-            setGradedQuestions([]);
-          }}
-        >
-          再測一次
-        </Button>
+        <Button onClick={session.restart}>再測一次</Button>
         <Link href={`/decks/${deckId}`}>
           <Button variant="secondary">返回學習集</Button>
         </Link>

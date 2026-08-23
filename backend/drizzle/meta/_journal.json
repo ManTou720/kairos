@@ -8,6 +8,13 @@
       "when": 1771422571754,
       "tag": "0000_dizzy_morbius",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787484064407,
+      "tag": "0001_narrow_winter_soldier",
+      "breakpoints": true
     }
   ]
 }

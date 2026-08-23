@@ -3,7 +3,7 @@ import { db } from "../db/index.js";
 import { users, sessions } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
-import { authMiddleware } from "../middleware/auth.js";
+import { authMiddleware, SESSION_TTL_MS } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -36,11 +36,13 @@ router.post("/login", async (req: Request, res: Response) => {
   }
 
   // Create session
+  const now = Date.now();
   const token = uuidv4();
   await db.insert(sessions).values({
     token,
     userId: user.id,
-    createdAt: Date.now(),
+    createdAt: now,
+    expiresAt: now + SESSION_TTL_MS,
   });
 
   res.json({

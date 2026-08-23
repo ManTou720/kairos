@@ -26,10 +26,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, isLoginPage, router]);
 
-  // Close sidebar on route change
-  useEffect(() => {
+  // Close sidebar on route change (adjust-state-on-prop-change pattern).
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
     setSidebarOpen(false);
-  }, [pathname]);
+  }
 
   if (loading) {
     return (

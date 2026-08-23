@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { db } from "../db/index.js";
-import { folders, decks } from "../db/schema.js";
+import { folders } from "../db/schema.js";
 import { eq, and, sql } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { authMiddleware } from "../middleware/auth.js";

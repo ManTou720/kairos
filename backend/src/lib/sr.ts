@@ -1,13 +1,21 @@
-import { SpacedRepetition } from "./types";
-
 /**
- * SM-2 spaced repetition algorithm.
+ * SM-2 spaced repetition algorithm (server-side source of truth).
  * quality: 0-5 (0-2 = incorrect, 3-5 = correct with varying ease)
  */
-export function calculateSR(
-  prev: SpacedRepetition,
-  quality: number
-): SpacedRepetition {
+
+export interface SrState {
+  interval: number;
+  easeFactor: number;
+  repetitions: number;
+  nextReview: number;
+  lastReview: number | null;
+}
+
+export function calculateSM2(
+  prev: SrState,
+  quality: number,
+  now: number = Date.now()
+): SrState {
   const q = Math.max(0, Math.min(5, Math.round(quality)));
 
   let { easeFactor, repetitions, interval } = prev;
@@ -32,18 +40,11 @@ export function calculateSR(
   easeFactor = easeFactor + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
   if (easeFactor < 1.3) easeFactor = 1.3;
 
-  const now = Date.now();
-  const nextReview = now + interval * 24 * 60 * 60 * 1000;
-
   return {
     interval,
     easeFactor,
     repetitions,
-    nextReview,
+    nextReview: now + interval * 24 * 60 * 60 * 1000,
     lastReview: now,
   };
-}
-
-export function isDueForReview(sr: SpacedRepetition): boolean {
-  return Date.now() >= sr.nextReview;
 }
