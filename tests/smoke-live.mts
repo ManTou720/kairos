@@ -41,7 +41,8 @@ async function api(path: string, init?: RequestInit) {
 
   // 3. /auth/me returns the user
   const me = await api("/api/auth/me", { headers: auth });
-  check("GET /api/auth/me → 200", me.status === 200 && (me.body as { username?: string }).username === username, me);
+  const meUser = (me.body as { user?: { username?: string } }).user?.username;
+  check("GET /api/auth/me → 200", me.status === 200 && meUser === username, me);
 
   // 4. create deck + cards
   const deck = await api("/api/decks", {
@@ -63,9 +64,13 @@ async function api(path: string, init?: RequestInit) {
   check("GET /api/decks contains new deck", Boolean(found), list);
 
   // 6. search matches card term (regression: EXISTS subquery bug)
+  //    (response returns the matching DECK; card terms aren't included in the payload)
   const search = await api("/api/search?q=hello", { headers: auth });
-  const searchOk = JSON.stringify(search.body).includes("hello");
-  check("GET /api/search?q=hello finds card", searchOk, search);
+  const searchBody = search.body as Array<{ id?: string }>;
+  const searchOk = search.status === 200 && Array.isArray(searchBody) && deckId
+    ? searchBody.some((d) => d.id === deckId)
+    : false;
+  check("GET /api/search?q=hello finds deck via card term", Boolean(searchOk), search);
 
   // 7. grade a card → SR fields update server-side
   if (deckId) {
@@ -77,8 +82,8 @@ async function api(path: string, init?: RequestInit) {
         headers: auth,
         body: JSON.stringify({ quality: 4 }),
       });
-      const rb = rev.body as { repetitions?: number };
-      check("POST review quality=4 → repetitions=1", rev.status === 200 && rb.repetitions === 1, rev);
+      const rb = rev.body as { sr?: { repetitions?: number } };
+      check("POST review quality=4 → sr.repetitions=1", rev.status === 200 && rb.sr?.repetitions === 1, rev);
     } else {
       check("deck detail has cards", false, detail);
     }
