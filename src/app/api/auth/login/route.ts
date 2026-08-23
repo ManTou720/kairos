@@ -1,18 +1,16 @@
-import { Router, Request, Response } from "express";
-import { db } from "../db/index.js";
-import { users, sessions } from "../db/schema.js";
+import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
-import { v4 as uuidv4 } from "uuid";
-import { authMiddleware, SESSION_TTL_MS } from "../middleware/auth.js";
+import { db } from "@/server/db";
+import { sessions, users } from "@/server/db/schema";
+import { SESSION_TTL_MS } from "@/server/lib/auth";
+import { jsonError } from "@/server/lib/http";
 
-const router = Router();
-
-router.post("/login", async (req: Request, res: Response) => {
-  const { username } = req.body;
+export async function POST(req: NextRequest) {
+  const body = await req.json().catch(() => ({}));
+  const { username } = body;
 
   if (!username || typeof username !== "string" || username.trim().length === 0) {
-    res.status(400).json({ error: "Username is required" });
-    return;
+    return jsonError(400, "Username is required");
   }
 
   const trimmedUsername = username.trim().toLowerCase();
@@ -27,7 +25,7 @@ router.post("/login", async (req: Request, res: Response) => {
 
   if (!user) {
     const newUser = {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       username: trimmedUsername,
       createdAt: Date.now(),
     };
@@ -37,7 +35,7 @@ router.post("/login", async (req: Request, res: Response) => {
 
   // Create session
   const now = Date.now();
-  const token = uuidv4();
+  const token = crypto.randomUUID();
   await db.insert(sessions).values({
     token,
     userId: user.id,
@@ -45,14 +43,8 @@ router.post("/login", async (req: Request, res: Response) => {
     expiresAt: now + SESSION_TTL_MS,
   });
 
-  res.json({
+  return NextResponse.json({
     token,
     user: { id: user.id, username: user.username },
   });
-});
-
-router.get("/me", authMiddleware, async (req: Request, res: Response) => {
-  res.json({ user: req.user });
-});
-
-export default router;
+}

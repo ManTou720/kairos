@@ -15,30 +15,17 @@ services:
       timeout: 3s
       retries: 10
 
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "3001:3001"
-    environment:
-      DATABASE_URL: postgres://kairos:kairos@db:5432/kairos
-      PORT: "3001"
-      CORS_ORIGIN: http://localhost:3000
-    depends_on:
-      db:
-        condition: service_healthy
-
-  frontend:
+  app:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:3001
+      DATABASE_URL: postgres://kairos:kairos@db:5432/kairos
     depends_on:
-      - backend
+      db:
+        condition: service_healthy
 
 volumes:
   pgdata:

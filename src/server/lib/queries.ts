@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { decks } from "../db/schema.js";
+import { decks } from "../db/schema";
 
 /**
  * Shared select shape for deck summaries (deck list + search results).

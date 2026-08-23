@@ -6,8 +6,8 @@
  * these types (type-only, erased at build time) from src/lib/types.ts.
  */
 import type { InferSelectModel } from "drizzle-orm";
-import type { cards, decks, folders, users } from "../db/schema.js";
-import type { SrState } from "../lib/sr.js";
+import type { cards, decks, folders, users } from "../db/schema";
+import type { SrState } from "../lib/sr";
 
 // ---- Row types (derived from schema) ----
 export type UserRow = InferSelectModel<typeof users>;

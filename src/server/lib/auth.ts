@@ -1,7 +1,6 @@
-import { Request, Response, NextFunction } from "express";
-import { db } from "../db/index.js";
-import { sessions, users } from "../db/schema.js";
 import { eq, lt } from "drizzle-orm";
+import { db } from "../db";
+import { sessions, users } from "../db/schema";
 
 /** Sessions are valid for 30 days after login. */
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -9,15 +8,6 @@ export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 // Throttle for the lazy expired-session purge (at most once per hour).
 const CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
 let lastCleanupAt = 0;
-
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace -- standard Express Request augmentation
-  namespace Express {
-    interface Request {
-      user?: { id: string; username: string };
-    }
-  }
-}
 
 function maybePurgeExpiredSessions() {
   const now = Date.now();
@@ -29,16 +19,19 @@ function maybePurgeExpiredSessions() {
     .catch((err) => console.error("Session cleanup failed:", err));
 }
 
-export async function authMiddleware(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith("Bearer ")) {
-    res.status(401).json({ error: "Missing or invalid authorization header" });
-    return;
-  }
+export interface AuthUser {
+  id: string;
+  username: string;
+}
+
+/**
+ * Validate the request's Bearer token and return the owning user,
+ * or null when missing/invalid/expired. Expired sessions are deleted
+ * so subsequent requests fail fast.
+ */
+export async function authenticate(req: Request): Promise<AuthUser | null> {
+  const authHeader = req.headers.get("authorization");
+  if (!authHeader?.startsWith("Bearer ")) return null;
 
   const token = authHeader.slice(7);
   const now = Date.now();
@@ -56,18 +49,12 @@ export async function authMiddleware(
     .where(eq(sessions.token, token))
     .limit(1);
 
-  if (result.length === 0) {
-    res.status(401).json({ error: "Invalid token" });
-    return;
-  }
+  if (result.length === 0) return null;
 
   if (result[0].expiresAt < now) {
-    // Expired: remove it so subsequent requests fail fast.
     await db.delete(sessions).where(eq(sessions.token, token));
-    res.status(401).json({ error: "Session expired" });
-    return;
+    return null;
   }
 
-  req.user = { id: result[0].userId, username: result[0].username };
-  next();
+  return { id: result[0].userId, username: result[0].username };
 }

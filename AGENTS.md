@@ -4,29 +4,20 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 ## Project Overview
 
-Kairos is a flashcard web application with four learning modes: flashcards, learn (spaced repetition), test, and match. It uses a Next.js frontend with an Express/PostgreSQL backend.
+Kairos is a flashcard web application with four learning modes: flashcards, learn (spaced repetition), test, and match. It is a single Next.js 16 app: pages live in `src/app`, and the API is implemented as Next.js route handlers under `src/app/api` (PostgreSQL via Drizzle ORM).
 
 ## Commands
 
-### Frontend (root directory)
 ```bash
-npm run dev          # Dev server on port 3000
+npm run dev          # Dev server on port 3000 (pages + API routes)
 npm run build        # Production build
 npm run lint         # ESLint
-```
-
-### Backend (`/backend`)
-```bash
-npm run dev          # Dev server with tsx watch on port 3001
-npm run build        # Compile TypeScript
-npm run db:generate  # Generate Drizzle migrations
-npm run db:migrate   # Run migrations
-npm run db:push      # Push schema directly to database
-```
-
-### Docker (full stack)
-```bash
-docker-compose up    # PostgreSQL + backend + frontend
+npm test             # Vitest unit tests
+docker compose up    # PostgreSQL + app
+npm run db:migrate   # Apply Drizzle migrations (needs DATABASE_URL)
+npm run db:generate  # Generate a migration from schema changes
+npm run db:push      # Push schema directly to database (dev only)
+npm run test:smoke   # E2E smoke test against a running server (needs DATABASE_URL)
 ```
 
 ## Design-Driven Development Workflow
@@ -59,34 +50,29 @@ The source of truth for all UI is the design file `layout.pen` (read via Pencil 
 
 ## Architecture
 
-**Frontend:** Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS 4 + SWR for data fetching.
+Single Next.js app (App Router) + PostgreSQL via Drizzle ORM. Simple username-based auth with Bearer token sessions stored server-side (no passwords); SM-2 spaced repetition is computed exclusively on the server.
 
-**Backend:** Express.js + PostgreSQL via Drizzle ORM. Simple username-based auth with Bearer token sessions (no passwords).
-
-### Frontend structure (`/src`)
+### Structure (`/src`)
 - `app/` — Next.js App Router pages. Dynamic deck routes at `app/decks/[deckId]/` with sub-routes for each learning mode (flashcards, learn, test, match, edit).
+- `app/api/` — Route handlers replacing the former Express backend (auth, decks, cards/review, folders, search). Server helpers live in `src/server/`:
+  - `server/db/schema.ts` — Drizzle schema (users, sessions, folders, decks, cards; cards carry SR fields).
+  - `server/lib/auth.ts` — Bearer token sessions with 30-day expiry (lazy cleanup of expired rows).
+  - `server/lib/sr.ts` — SM-2 implementation (server-side source of truth).
+  - `server/lib/queries.ts` — shared deck-summary select columns.
+  - `server/types/api.ts` — single source of truth for API DTOs, inferred from the Drizzle schema. The frontend imports these type-only via `lib/types.ts`.
+- `features/` — study-mode state machines: `flashcards/`, `learn/`, `test/`, `match/` hooks + pure engines (match-engine, grading).
 - `components/` — Organized by domain: `ui/` (Button, Input, Modal), `layout/` (NavBar, Sidebar, AppShell), `deck/`, `flashcards/`, `learn/`, `test/`, `match/`.
 - `contexts/AuthContext.tsx` — Auth state via React Context.
 - `hooks/` — `useAuth`, `useDecks`, `useKeyboard`, `useTimer`.
-- `lib/api.ts` — Centralized API client. All requests go through this.
-- `lib/sr.ts` — SM-2 spaced repetition algorithm implementation.
-- `lib/test-generator.ts` — Generates multiple-choice, true/false, and written questions.
-- `lib/types.ts` — Shared TypeScript interfaces.
-
-### Backend structure (`/backend/src`)
-- `index.ts` — Express app entry point with route registration.
-- `db/schema.ts` — Drizzle ORM schema (users, sessions, folders, decks, cards). Cards include spaced repetition fields (srInterval, srEaseFactor, srRepetitions, srNextReview).
-- `routes/` — auth, decks, cards, folders, search endpoints.
-- `backend/src/routes/auth.ts` — Bearer token sessions with 30-day expiry (lazy cleanup of expired rows).
+- `lib/api.ts` — Centralized API client (same-origin `/api/*`). All requests go through this.
+- `lib/test-generator.ts` — Generates multiple-choice, true/false, and written questions; grading lives in `features/test/grading.ts`.
 
 ### API
-All endpoints under `/api`. Key routes: `/api/auth/login`, `/api/decks`, `/api/cards/:id/review` (POST, grades 0-5; SM-2 computed server-side), `/api/folders`, `/api/search?q=`.
+All endpoints under `/api` (same origin). Key routes: `/api/auth/login`, `/api/decks`, `/api/cards/:id/review` (POST, grades 0-5; SM-2 computed server-side), `/api/folders`, `/api/search?q=`.
 
 ## Environment Variables
 
-Frontend `.env`: `NEXT_PUBLIC_API_URL=http://localhost:3001`
-
-Backend `backend/.env`: `DATABASE_URL`, `PORT` (3001), `CORS_ORIGIN` (http://localhost:3000)
+Root `.env` (see `.env.example`): `DATABASE_URL` (required), optional `NEXT_PUBLIC_API_URL` to point the client at an external API instead of the built-in route handlers.
 
 ## Conventions
 

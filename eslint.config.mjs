@@ -12,10 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // Generated build output & dependencies:
-    "backend/dist/**",
-    "backend/drizzle/meta/**",
     "**/node_modules/**",
+    // Generated drizzle-kit metadata:
+    "drizzle/meta/**",
   ]),
 ]);
 

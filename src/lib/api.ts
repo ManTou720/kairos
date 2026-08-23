@@ -1,7 +1,9 @@
 import { getToken } from "./auth";
 import type { Deck, DeckSummary, Folder, SpacedRepetition, User } from "./types";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+// Same-origin API: the Express backend has been merged into Next.js
+// route handlers under app/api. Override for external deployments.
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 async function request<T>(
   path: string,

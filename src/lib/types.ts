@@ -1,7 +1,7 @@
 /**
- * API types — single source of truth lives in the backend
- * (backend/src/types/api.ts, derived from the Drizzle schema).
- * This is a type-only re-export; it is erased at build time.
+ * API types — single source of truth lives in src/server/types/api.ts
+ * (derived from the Drizzle schema). This is a type-only re-export;
+ * it is erased at build time so no server code reaches the client.
  */
 export type {
   SpacedRepetition,
@@ -10,7 +10,7 @@ export type {
   DeckSummary,
   User,
   Folder,
-} from "../../backend/src/types/api";
+} from "@/server/types/api";
 
 // ---- Test mode (frontend-only concepts) ----
 
