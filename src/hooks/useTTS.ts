@@ -1,46 +1,18 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { detectLang, normalizeLang } from "@/lib/tts";
 
-/** UI 語言代碼 → BCP-47 完整標籤（瀏覽器需要完整標籤才會配到正確語音） */
-const LANG_TO_BCP47: Record<string, string> = {
-  en: "en-US",
-  ja: "ja-JP",
-  ko: "ko-KR",
-  fr: "fr-FR",
-  de: "de-DE",
-  es: "es-ES",
-  it: "it-IT",
-  pt: "pt-BR",
-  "zh-TW": "zh-TW",
-  "zh-CN": "zh-CN",
-};
+export { LANG_TO_BCP47 } from "@/lib/tts";
 
-/** 「自動偵測」時依字元集粗判語言 */
-function detectLang(text: string): string | null {
-  if (/[\u3040-\u309f\u30a0-\u30ff]/.test(text)) return "ja-JP"; // 平/片假名
-  if (/[\uac00-\ud7af\u1100-\u11ff]/.test(text)) return "ko-KR"; // 諺文
-  if (/[\u4e00-\u9fff]/.test(text)) return "zh-TW"; // 漢字 → 預設繁中
-  if (/[àâäèéêëîïôöùûüç]/i.test(text)) return "fr-FR";
-  if (/[áéíóúñ¿¡]/i.test(text)) return "es-ES";
-  if (/[àèìòù]/i.test(text)) return "it-IT";
-  if (/[äöüß]/i.test(text)) return "de-DE";
-  if (/[ãõç]/i.test(text)) return "pt-BR";
-  if (/^[\x00-\x7F]+$/.test(text)) return "en-US"; // 純 ASCII
-  return null;
-}
-
-function normalizeLang(lang?: string | null): string | null {
-  if (!lang || lang === "auto") return null;
-  if (LANG_TO_BCP47[lang]) return LANG_TO_BCP47[lang];
-  // 已是完整標籤（含 -）就直接用；否則視為短碼
-  return lang.includes("-") ? lang : LANG_TO_BCP47[lang.toLowerCase()] ?? lang;
-}
+const SERVER_TTS_TIMEOUT_MS = 4000;
 
 export function useTTS() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
   const voicesLoadedRef = useRef(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   // 語音清單非同步載入，先快取起來供 speak() 即時挑選
   useEffect(() => {
@@ -80,28 +52,102 @@ export function useTTS() {
     );
   }
 
-  const speak = useCallback((text: string, lang?: string | null) => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-    if (!text.trim()) return;
-
-    window.speechSynthesis.cancel();
-
-    const resolved =
-      normalizeLang(lang) ?? detectLang(text) ?? undefined;
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    if (resolved) {
-      utterance.lang = resolved;
-      const voice = pickVoice(resolved);
-      if (voice) utterance.voice = voice; // 明確指定語音，避免系統用預設嗓音
+  /** 停掉目前任何播放（雲端音檔與系統語音） */
+  const stopCurrent = useCallback(() => {
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
     }
-
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-
-    window.speechSynthesis.speak(utterance);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+      audioRef.current = null;
+    }
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setIsSpeaking(false);
   }, []);
+
+  /** 瀏覽器內建 Web Speech（離線備援） */
+  const speakWithBrowser = useCallback(
+    (text: string, resolved?: string) => {
+      if (typeof window === "undefined" || !window.speechSynthesis) return;
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      if (resolved) {
+        utterance.lang = resolved;
+        const voice = pickVoice(resolved);
+        if (voice) utterance.voice = voice; // 明確指定語音，避免系統用預設嗓音
+      }
+
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+
+      window.speechSynthesis.speak(utterance);
+    },
+    []
+  );
+
+  /** 優先使用伺服器端神經語音（/api/tts），失敗退回 Web Speech */
+  const speakWithServer = useCallback(async (text: string, lang?: string | null) => {
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const timeout = setTimeout(() => controller.abort(), SERVER_TTS_TIMEOUT_MS);
+
+    try {
+      const params = new URLSearchParams({ text });
+      if (lang && lang !== "auto") params.set("lang", lang);
+      const res = await fetch(`/api/tts?${params.toString()}`, {
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      if (!res.ok) return false;
+
+      const blob = await res.blob();
+      if (!blob.type.startsWith("audio/")) return false;
+
+      stopCurrent(); // 取代舊的播放（不會 abort 自己，因為已換新 controller）
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onplay = () => setIsSpeaking(true);
+      audio.onended = () => {
+        URL.revokeObjectURL(url);
+        if (audioRef.current === audio) {
+          audioRef.current = null;
+          setIsSpeaking(false);
+        }
+      };
+      audio.onerror = () => {
+        URL.revokeObjectURL(url);
+        if (audioRef.current === audio) {
+          audioRef.current = null;
+          setIsSpeaking(false);
+        }
+      };
+      await audio.play();
+      return true;
+    } catch {
+      clearTimeout(timeout);
+      return false;
+    }
+  }, [stopCurrent]);
+
+  const speak = useCallback(
+    (text: string, lang?: string | null) => {
+      if (!text.trim()) return;
+      stopCurrent();
+
+      const resolved = normalizeLang(lang) ?? detectLang(text) ?? undefined;
+
+      speakWithServer(text, lang)
+        .then((ok) => {
+          if (!ok) speakWithBrowser(text, resolved);
+        })
+        .catch(() => speakWithBrowser(text, resolved));
+    },
+    [speakWithServer, speakWithBrowser, stopCurrent]
+  );
 
   useEffect(() => {
     return () => {
