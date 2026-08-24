@@ -13,6 +13,12 @@ export default function SearchPage() {
   const [searching, setSearching] = useState(false);
   const [tab, setTab] = useState<TabType>("all");
 
+  // 支援 /search?q=... 直接帶入查詢(從 NavBar 送出)
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("q");
+    if (q) setQuery(q);
+  }, []);
+
   useEffect(() => {
     if (!query.trim()) {
       setResults([]);

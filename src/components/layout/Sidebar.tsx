@@ -48,7 +48,7 @@ export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: (
       >
         <div className="p-6 flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/logo.png" alt="Kairos" className="w-8 h-8 rounded-lg" />
+          <img src="/images/logo.png" alt="Kairos" className="w-8 h-8 rounded-xl" />
           <Link
             href="/"
             onClick={onClose}

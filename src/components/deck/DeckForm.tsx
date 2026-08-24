@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { mutate } from "swr";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import CardRow from "./CardRow";
+import CardRow, { LanguageSelect } from "./CardRow";
 import * as api from "@/lib/api";
 import { Deck } from "@/lib/types";
 
@@ -38,6 +38,17 @@ export default function DeckForm({ deck }: DeckFormProps) {
     ]
   );
   const [submitting, setSubmitting] = useState(false);
+  // 全域預設語言：新增詞語自動套用；變更時同步到仍為「自動」或舊預設的卡片
+  const [defaultTermLang, setDefaultTermLang] = useState(
+    () =>
+      deck?.cards.find((c) => c.termLang && c.termLang !== "auto")?.termLang ??
+      "auto"
+  );
+  const [defaultDefLang, setDefaultDefLang] = useState(
+    () =>
+      deck?.cards.find((c) => c.defLang && c.defLang !== "auto")?.defLang ??
+      "auto"
+  );
   const dragFromRef = useRef<number | null>(null);
   const [dragFrom, setDragFrom] = useState<number | null>(null);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
@@ -58,12 +69,38 @@ export default function DeckForm({ deck }: DeckFormProps) {
     });
   }
 
+  function handleDefaultLangChange(
+    field: "termLang" | "defLang",
+    value: string
+  ) {
+    const old = field === "termLang" ? defaultTermLang : defaultDefLang;
+    if (field === "termLang") {
+      setDefaultTermLang(value);
+    } else {
+      setDefaultDefLang(value);
+    }
+    // 套用到仍為「自動偵測」或舊預設值的卡片（保留手動覆寫）
+    setCards((prev) =>
+      prev.map((c) =>
+        c[field] === old || c[field] === "auto" ? { ...c, [field]: value } : c
+      )
+    );
+  }
+
   function removeCard(index: number) {
     setCards((prev) => prev.filter((_, i) => i !== index));
   }
 
   function addCard() {
-    setCards((prev) => [...prev, { term: "", definition: "", termLang: "auto", defLang: "auto" }]);
+    setCards((prev) => [
+      ...prev,
+      {
+        term: "",
+        definition: "",
+        termLang: defaultTermLang,
+        defLang: defaultDefLang,
+      },
+    ]);
   }
 
   function handleDragStart(index: number) {
@@ -178,6 +215,32 @@ export default function DeckForm({ deck }: DeckFormProps) {
             className="w-full rounded-lg border border-[#D5C8B2] bg-white px-3 py-2 text-sm text-[#1A1A1A] placeholder:text-[#9A9A94] focus:border-[#D4AF37] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
           />
         </div>
+      </div>
+
+      <div
+        className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border border-[#E8DDD0] bg-white px-4 py-3"
+      >
+        <span className="text-sm font-semibold text-[#1A1A1A]">
+          <i className="fa-solid fa-language text-[#D4AF37] mr-1.5" />
+          預設語言
+        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold text-[#6A6963]">詞語</span>
+          <LanguageSelect
+            value={defaultTermLang}
+            onChange={(v) => handleDefaultLangChange("termLang", v)}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold text-[#6A6963]">定義</span>
+          <LanguageSelect
+            value={defaultDefLang}
+            onChange={(v) => handleDefaultLangChange("defLang", v)}
+          />
+        </div>
+        <span className="text-[11px] text-[#9A9A94] ml-auto hidden sm:block">
+          新增詞語會自動套用
+        </span>
       </div>
 
       <div

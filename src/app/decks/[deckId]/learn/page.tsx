@@ -132,7 +132,7 @@ export default function LearnPage({
                   key={i}
                   onClick={() => session.handleSelect(option)}
                   disabled={!!selected}
-                  className={`flex items-center rounded-full border px-4 h-12 text-sm text-[#1A1A1A] transition-all ${style}`}
+                  className={`flex items-center rounded-full border px-4 h-12 text-sm text-[#1A1A1A] transition-all duration-150 hover:-translate-y-0.5 active:scale-[0.97] ${style}`}
                 >
                   {option}
                 </button>

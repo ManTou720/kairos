@@ -31,12 +31,12 @@ export default function FlashcardCard({
 
   return (
     <div
-      className="flip-card w-full cursor-pointer"
+      className="flip-card w-full cursor-pointer transition-transform duration-150 active:scale-[0.99]"
       style={{ minHeight: "280px" }}
       onClick={onFlip}
     >
       <div className={`flip-card-inner relative w-full h-full ${flipped ? "flipped" : ""}`} style={{ minHeight: "280px" }}>
-        <div className="flip-card-front absolute inset-0 flex items-center justify-center rounded-2xl border border-[#E8DDD0] bg-white p-8 shadow-sm">
+        <div className="flip-card-front absolute inset-0 flex items-center justify-center rounded-2xl border border-[#E8DDD0] bg-white p-8 shadow-sm hover:shadow-md hover:border-[#D4AF37]/60 transition-shadow">
           {onSpeak && (
             <button
               onClick={handleSpeak}

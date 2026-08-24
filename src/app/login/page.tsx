@@ -35,7 +35,7 @@ export default function LoginPage() {
             <img
               src="/images/logo.png"
               alt="Kairos"
-              className="w-16 h-16 mx-auto mb-4"
+              className="w-16 h-16 mx-auto mb-4 rounded-xl"
             />
             <h1 className="font-[family-name:var(--font-display)] text-4xl font-bold text-[#0D2275] tracking-tight">
               Kairos

@@ -130,7 +130,7 @@ export default function CardRow({
   );
 }
 
-function LanguageSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+export function LanguageSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
     <div className="relative">
       <select

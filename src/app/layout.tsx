@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist_Mono } from "next/font/google";
 import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
@@ -24,6 +24,19 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Kairos - 掌握時機，掌握語言",
   description: "Open source flashcard webapp for effective learning",
+  icons: {
+    icon: [{ url: "/icon-192.png", type: "image/png", sizes: "192x192" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  appleWebApp: {
+    capable: true,
+    title: "Kairos",
+    statusBarStyle: "default",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0D2275",
 };
 
 export default function RootLayout({

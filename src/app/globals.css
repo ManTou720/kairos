@@ -26,11 +26,11 @@
 
 /* Flashcard 3D flip */
 .flip-card {
-  perspective: 1000px;
+  perspective: 1200px;
 }
 
 .flip-card-inner {
-  transition: transform 0.5s;
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
   transform-style: preserve-3d;
 }
 
@@ -58,4 +58,31 @@
 
 .animate-shake {
   animation: shake 0.4s ease-in-out;
+}
+
+/* Page fade-in */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s ease-out both;
+}
+
+/* Respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .flip-card-inner {
+    transition-duration: 0.01s;
+  }
+  .animate-fade-in,
+  .animate-shake {
+    animation: none;
+  }
 }
