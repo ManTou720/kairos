@@ -12,15 +12,26 @@ const CACHE_LIMIT = 200;
 /** 記憶體快取：同文字直接回快取，省 WebSocket 往返（serverless 實例存活期間有效） */
 const audioCache = new Map<string, Buffer>();
 
-function cacheKey(text: string, voice: string): string {
-  return createHash("sha1").update(`${voice}::${text}`).digest("hex");
+function cacheKey(text: string, voice: string, rate?: number): string {
+  return createHash("sha1")
+    .update(`${voice}::${rate ?? 0}::${text}`)
+    .digest("hex");
 }
 
-async function synthesize(text: string, voice: string): Promise<Buffer> {
+async function synthesize(
+  text: string,
+  voice: string,
+  ratePct?: number
+): Promise<Buffer> {
   const tts = new MsEdgeTTS();
   await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
   try {
-    const { audioStream } = tts.toStream(text);
+    const { audioStream } = tts.toStream(
+      text,
+      ratePct !== undefined && ratePct !== 0
+        ? { rate: `${ratePct > 0 ? "+" : ""}${ratePct}%` }
+        : undefined
+    );
     const chunks: Buffer[] = [];
     for await (const chunk of audioStream) {
       chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
@@ -57,7 +68,13 @@ export async function GET(req: NextRequest) {
     voice = "en-US-JennyNeural";
   }
 
-  const key = cacheKey(text, voice);
+  // 語速：SSML prosody 百分比（-60 ～ +40）
+  const rawRate = Number(req.nextUrl.searchParams.get("rate"));
+  const ratePct = Number.isFinite(rawRate) && rawRate !== 0
+    ? Math.max(-60, Math.min(40, Math.round(rawRate)))
+    : undefined;
+
+  const key = cacheKey(text, voice, ratePct);
   const headers = {
     "Content-Type": "audio/mpeg",
     // 內容不可變（同 key 永遠同一音檔），可放心交給 CDN／瀏覽器快取
@@ -73,7 +90,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const audio = await synthesize(text, voice);
+    const audio = await synthesize(text, voice, ratePct);
     audioCache.set(key, audio);
     if (audioCache.size > CACHE_LIMIT) {
       // 淘汰最舊的一筆

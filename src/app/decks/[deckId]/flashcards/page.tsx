@@ -6,6 +6,7 @@ import { useDeck } from "@/hooks/useDecks";
 import { useFlashcardSession } from "@/features/flashcards/useFlashcardSession";
 import FlashcardCard from "@/components/flashcards/FlashcardCard";
 import { useTTS } from "@/hooks/useTTS";
+import { getUserRateMult, setUserRateMult } from "@/lib/tts";
 import { useKeyboard } from "@/hooks/useKeyboard";
 
 export default function FlashcardsPage({
@@ -22,6 +23,8 @@ export default function FlashcardsPage({
   // 設定:自動播放發音
   const [autoplay, setAutoplay] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // 設定:語速（localStorage 共享給所有發音按鈕）
+  const [rateMult, setRateMult] = useState<number>(() => getUserRateMult());
 
   // 自動播放發音:新卡出現時朗讀詞語
   useEffect(() => {
@@ -181,9 +184,47 @@ export default function FlashcardsPage({
                   checked={autoplay}
                   onChange={(v) => {
                     setAutoplay(v);
+                    if (v) {
+                      const c = session.current;
+                      if (c) speak(c.term, c.termLang); // 開啟時立刻朗讀當前卡作為回饋
+                    }
                     setSettingsOpen(false);
                   }}
                 />
+                <div className="px-3 py-2.5">
+                  <span className="block text-sm font-medium text-[#1A1A1A]">
+                    語速
+                  </span>
+                  <span className="block text-[11px] text-[#9A9A94] mb-2">
+                    神經語音朗讀速度，長句自動放慢
+                  </span>
+                  <div className="flex gap-1.5">
+                    {[
+                      { mult: 0.6, label: "慢" },
+                      { mult: 0.8, label: "稍慢" },
+                      { mult: 1, label: "正常" },
+                    ].map((opt) => (
+                      <button
+                        key={opt.mult}
+                        type="button"
+                        aria-pressed={rateMult === opt.mult}
+                        onClick={() => {
+                          setRateMult(opt.mult);
+                          setUserRateMult(opt.mult);
+                          const c = session.current;
+                          if (autoplay && c) speak(c.term, c.termLang); // 重播試聽
+                        }}
+                        className={`flex-1 rounded-lg border px-2 py-1.5 text-xs font-medium transition-all active:scale-[0.97] ${
+                          rateMult === opt.mult
+                            ? "border-[#D4AF37] bg-[#D4AF3715] text-[#B8912C]"
+                            : "border-[#E8DDD0] text-[#6A6963] hover:border-[#D5C8B2] hover:text-[#1A1A1A]"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <SwitchRow
                   label="追蹤進度"
                   hint="關閉時評分按鈕只會翻頁"

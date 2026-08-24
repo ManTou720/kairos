@@ -1,10 +1,57 @@
 import { describe, expect, it } from "vitest";
 import {
   detectLang,
+  effectiveRatePct,
   normalizeLang,
   resolveVoice,
+  splitForSpeech,
   voiceForLang,
 } from "./tts";
+
+describe("splitForSpeech", () => {
+  it("returns single chunk for short text", () => {
+    expect(splitForSpeech("ciao")).toEqual(["ciao"]);
+  });
+
+  it("splits long text at sentence boundaries", () => {
+    const t = "第一句話。".repeat(30); // 150 字,句號分隔
+    const parts = splitForSpeech(t);
+    expect(parts.length).toBeGreaterThan(1);
+    for (const p of parts) expect(p.length).toBeLessThanOrEqual(100);
+  });
+
+  it("falls back to clause breaks inside long sentences", () => {
+    const t = Array.from({ length: 40 }, (_, i) => `詞語${i}`).join("，");
+    const parts = splitForSpeech(t);
+    expect(parts.length).toBeGreaterThan(1);
+    expect(parts.every((p) => p.length <= 100)).toBe(true);
+  });
+
+  it("hard-splits text without any punctuation", () => {
+    const t = "a".repeat(250);
+    const parts = splitForSpeech(t);
+    expect(parts.every((p) => p.length <= 100)).toBe(true);
+  });
+});
+
+describe("effectiveRatePct", () => {
+  it("maps multiplier to SSML percent", () => {
+    expect(effectiveRatePct("ciao", 1)).toBe(0);
+    expect(effectiveRatePct("ciao", 0.8)).toBe(-20);
+    expect(effectiveRatePct("ciao", 0.6)).toBe(-40);
+  });
+
+  it("auto-slows long sentences", () => {
+    const long = "a".repeat(45);
+    expect(effectiveRatePct(long, 1)).toBe(-10);
+    const veryLong = "a".repeat(95);
+    expect(effectiveRatePct(veryLong, 0.8)).toBe(-40);
+  });
+
+  it("clamps to [-60, 40]", () => {
+    expect(effectiveRatePct("a".repeat(200), 0.6)).toBe(-60);
+  });
+});
 
 describe("detectLang", () => {
   it("detects Japanese kana", () => {

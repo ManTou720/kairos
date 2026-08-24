@@ -76,3 +76,75 @@ export function voiceForLang(bcp47?: string | null): string {
 export function resolveVoice(text: string, lang?: string | null): string {
   return voiceForLang(normalizeLang(lang) ?? detectLang(text));
 }
+
+// ── 語速控制 ─────────────────────────────────────────────
+
+/** 使用者語速偏好存放在 localStorage 的 key（倍率） */
+export const RATE_KEY = "kairos-tts-rate";
+
+/** SSML prosody rate 百分比上限 */
+export function clampRatePct(pct: number): number {
+  return Math.max(-60, Math.min(40, Math.round(pct)));
+}
+
+/** 讀取使用者語速倍率（0.6 / 0.8 / 1），無設定回 1 */
+export function getUserRateMult(): number {
+  if (typeof window === "undefined") return 1;
+  const v = Number(localStorage.getItem(RATE_KEY));
+  return v === 0.6 || v === 0.8 || v === 1 ? v : 1;
+}
+
+export function setUserRateMult(mult: number): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(RATE_KEY, String(mult));
+}
+
+/**
+ * 最終 SSML rate 百分比：使用者偏好 + 長句自動放慢。
+ * 例：0.8 倍 → "-20%"；長句再額外放慢。
+ */
+export function effectiveRatePct(text: string, mult: number): number {
+  let pct = Math.round((mult - 1) * 100);
+  if (text.length >= 40) pct -= 10; // 長定義/句子放慢一點
+  if (text.length >= 90) pct -= 10; // 更長再慢一些
+  return clampRatePct(pct);
+}
+
+// ── 句子分段朗讀（Web Speech 備援用）───────────────────────
+
+const SENTENCE_BREAK = /[。！？；!?;\n]/;
+const CLAUSE_BREAK = /[,、，：:]/;
+
+/**
+ * 把長文字切成瀏覽器朗讀安全的小段（Chrome 對長 utterance 會中途斷掉）。
+ * 先按句號切，太長的句子再按逗號切，最後硬切。
+ */
+export function splitForSpeech(text: string, maxLen = 100): string[] {
+  if (text.length <= maxLen) return [text];
+
+  const rawParts = text.split(SENTENCE_BREAK).filter((p) => p.trim());
+  const parts: string[] = [];
+  for (const part of rawParts) {
+    if (part.length <= maxLen) {
+      parts.push(part);
+      continue;
+    }
+    // 句子仍太長 → 按子句切
+    let buf = "";
+    for (const clause of part.split(CLAUSE_BREAK).filter((c) => c.trim())) {
+      if ((buf + clause).length > maxLen && buf) {
+        parts.push(buf);
+        buf = clause;
+      } else {
+        buf += clause;
+      }
+    }
+    if (buf) parts.push(buf);
+  }
+  // 保底：任何超長段落硬切
+  const out: string[] = [];
+  for (const p of parts) {
+    for (let i = 0; i < p.length; i += maxLen) out.push(p.slice(i, i + maxLen));
+  }
+  return out.length > 0 ? out : [text];
+}

@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { detectLang, normalizeLang } from "@/lib/tts";
+import {
+  detectLang,
+  effectiveRatePct,
+  getUserRateMult,
+  normalizeLang,
+  splitForSpeech,
+} from "@/lib/tts";
 
 export { LANG_TO_BCP47 } from "@/lib/tts";
 
@@ -13,6 +19,7 @@ export function useTTS() {
   const voicesLoadedRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const utterQueueRef = useRef<SpeechSynthesisUtterance[]>([]);
 
   // 語音清單非同步載入，先快取起來供 speak() 即時挑選
   useEffect(() => {
@@ -57,6 +64,7 @@ export function useTTS() {
     if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
+    utterQueueRef.current = []; // 清空參照，讓 GC 回收
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.src = "";
@@ -67,23 +75,38 @@ export function useTTS() {
     setIsSpeaking(false);
   }, []);
 
-  /** 瀏覽器內建 Web Speech（離線備援） */
+  /** 瀏覽器內建 Web Speech（離線備援）：長句分段朗讀，避免 Chrome 中途斷音 */
   const speakWithBrowser = useCallback(
     (text: string, resolved?: string) => {
       if (typeof window === "undefined" || !window.speechSynthesis) return;
 
-      const utterance = new SpeechSynthesisUtterance(text);
-      if (resolved) {
-        utterance.lang = resolved;
-        const voice = pickVoice(resolved);
-        if (voice) utterance.voice = voice; // 明確指定語音，避免系統用預設嗓音
-      }
+      const chunks = splitForSpeech(text);
+      // 語速倍率換算成 SpeechSynthesis rate，長句同步放慢
+      const ratePct = effectiveRatePct(text, getUserRateMult());
+      const rate = Math.max(0.4, Math.min(1.5, 1 + ratePct / 100));
 
-      utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
+      let index = 0;
+      setIsSpeaking(true);
 
-      window.speechSynthesis.speak(utterance);
+      const speakNext = () => {
+        if (index >= chunks.length) {
+          setIsSpeaking(false);
+          return;
+        }
+        const chunk = chunks[index++];
+        const utterance = new SpeechSynthesisUtterance(chunk);
+        if (resolved) {
+          utterance.lang = resolved;
+          const voice = pickVoice(resolved);
+          if (voice) utterance.voice = voice; // 明確指定語音，避免系統用預設嗓音
+        }
+        utterance.rate = rate;
+        utterance.onend = () => speakNext();
+        utterance.onerror = () => setIsSpeaking(false);
+        utterQueueRef.current.push(utterance); // 保留參照，避免 Chrome GC 掉正在朗讀的 utterance
+        window.speechSynthesis.speak(utterance);
+      };
+      speakNext();
     },
     []
   );
@@ -97,6 +120,7 @@ export function useTTS() {
     try {
       const params = new URLSearchParams({ text });
       if (lang && lang !== "auto") params.set("lang", lang);
+      params.set("rate", String(effectiveRatePct(text, getUserRateMult())));
       const res = await fetch(`/api/tts?${params.toString()}`, {
         signal: controller.signal,
       });
