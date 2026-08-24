@@ -27,6 +27,8 @@ export default function DeckDetailPage({
   const router = useRouter();
   const { user } = useAuth();
   const [showDelete, setShowDelete] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState(0);
+  const [previewFlipped, setPreviewFlipped] = useState(false);
   const { speak } = useTTS();
 
   if (isLoading) {
@@ -65,6 +67,8 @@ export default function DeckDetailPage({
   }
 
   const cardCount = deck.cards.length;
+  // 防呆：卡片被刪除時避免預覽索引越界
+  const safePreviewIndex = Math.min(previewIndex, cardCount - 1);
 
   const modes = [
     {
@@ -188,15 +192,87 @@ export default function DeckDetailPage({
       {deck.cards[0] && (
         <section>
           <h2 className="text-base font-semibold text-[#1A1A1A] mb-3">預覽</h2>
-          <div className="rounded-2xl border border-[#E8DDD0] bg-white p-8 max-w-xl relative">
-            <div className="absolute top-4 left-4">
-              <button onClick={() => speak(deck.cards[0].term, deck.cards[0].termLang)} aria-label="播放發音" className="text-[#6A6963] hover:text-[#D4AF37] transition-colors">
-                <i className="fa-solid fa-volume-high" />
-              </button>
+          <div className="flex items-center gap-3 max-w-xl">
+            <button
+              aria-label="上一張"
+              disabled={previewIndex === 0}
+              onClick={() => {
+                setPreviewIndex((i) => Math.max(0, i - 1));
+                setPreviewFlipped(false);
+              }}
+              className="shrink-0 w-10 h-10 rounded-full border border-[#D5C8B2] bg-white flex items-center justify-center text-[#6A6963] hover:border-[#D4AF37] hover:text-[#1A1A1A] active:scale-[0.95] disabled:opacity-30 disabled:pointer-events-none transition-all"
+            >
+              <i className="fa-solid fa-chevron-left text-sm" />
+            </button>
+            <div
+              className="flex-1 min-w-0 flip-card cursor-pointer select-none animate-fade-in"
+              key={deck.cards[safePreviewIndex].id}
+              onClick={() => setPreviewFlipped((v) => !v)}
+            >
+              <div
+                className={`flip-card-inner relative w-full h-[220px] sm:h-[240px] ${
+                  previewFlipped ? "flipped" : ""
+                }`}
+              >
+                <div className="flip-card-front absolute inset-0 rounded-2xl border border-[#E8DDD0] bg-white p-8 shadow-sm">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const c = deck.cards[safePreviewIndex];
+                      speak(c.term, c.termLang);
+                    }}
+                    aria-label="播放發音"
+                    className="absolute top-4 left-4 w-9 h-9 rounded-full flex items-center justify-center text-[#6A6963] hover:text-[#D4AF37] hover:bg-[#F6F4F0] transition-colors"
+                  >
+                    <i className="fa-solid fa-volume-high" />
+                  </button>
+                  <span className="absolute top-4 right-4 text-xs text-[#9A9A94] tabular-nums">
+                    {previewIndex + 1} / {deck.cards.length}
+                  </span>
+                  <div className="w-full h-full flex items-center justify-center">
+                    <p className="font-display text-[28px] sm:text-[32px] font-medium text-[#1A1A1A] text-center leading-snug break-words max-h-full overflow-y-auto">
+                      {deck.cards[safePreviewIndex].term}
+                    </p>
+                  </div>
+                  <span className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs text-[#9A9A94] whitespace-nowrap">
+                    <i className="fa-solid fa-hand-pointer mr-1.5" />
+                    點擊翻面
+                  </span>
+                </div>
+                <div className="flip-card-back absolute inset-0 rounded-2xl border border-[#D4AF37]/40 bg-gradient-to-b from-[#FBF6EA] to-[#F6EDDA] p-8 shadow-sm">
+                  <span className="absolute top-4 left-4 text-[11px] font-semibold uppercase tracking-wider text-[#B8912C]">
+                    定義
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const c = deck.cards[safePreviewIndex];
+                      speak(c.term, c.termLang);
+                    }}
+                    aria-label="播放發音"
+                    className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center text-[#9A9A94] hover:text-[#D4AF37] hover:bg-white/70 transition-colors"
+                  >
+                    <i className="fa-solid fa-volume-high" />
+                  </button>
+                  <div className="w-full h-full flex items-center justify-center">
+                    <p className="text-lg sm:text-xl text-center text-[#1A1A1A] leading-relaxed break-words max-h-full overflow-y-auto">
+                      {deck.cards[safePreviewIndex].definition}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <p className="font-display text-[32px] font-medium text-[#1A1A1A] text-center">
-              {deck.cards[0].term}
-            </p>
+            <button
+              aria-label="下一張"
+              disabled={previewIndex >= deck.cards.length - 1}
+              onClick={() => {
+                setPreviewIndex((i) => Math.min(deck.cards.length - 1, i + 1));
+                setPreviewFlipped(false);
+              }}
+              className="shrink-0 w-10 h-10 rounded-full border border-[#D5C8B2] bg-white flex items-center justify-center text-[#6A6963] hover:border-[#D4AF37] hover:text-[#1A1A1A] active:scale-[0.95] disabled:opacity-30 disabled:pointer-events-none transition-all"
+            >
+              <i className="fa-solid fa-chevron-right text-sm" />
+            </button>
           </div>
         </section>
       )}
@@ -208,27 +284,41 @@ export default function DeckDetailPage({
             本學習集中的詞語 ({cardCount})
           </h2>
         </div>
-        <div className="divide-y divide-[#E8DDD0] border-t border-b border-[#E8DDD0]">
-          {deck.cards.map((card) => (
+        <div className="border-t border-b border-[#E8DDD0]">
+          {/* 欄位標題 */}
+          <div className="hidden sm:flex items-center gap-4 px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[#9A9A94] border-b border-[#E8DDD0]/70">
+            <span className="w-7 shrink-0">#</span>
+            <span className="flex-1">詞語</span>
+            <span className="flex-1">定義</span>
+            <span className="w-9 shrink-0" aria-hidden />
+          </div>
+          {deck.cards.map((card, i) => (
             <div
               key={card.id}
-              className="flex items-center gap-4 py-3.5"
+              className="group flex items-center gap-4 px-3 py-3.5 border-b border-[#E8DDD0]/50 last:border-b-0 hover:bg-white/70 transition-colors rounded-sm"
             >
-              <div className="flex items-center gap-3 shrink-0">
-                <button
-                  onClick={() => speak(card.term, card.termLang)}
-                  aria-label="播放發音"
-                  className="text-[#6A6963] hover:text-[#D4AF37] transition-colors"
-                >
-                  <i className="fa-solid fa-volume-high text-sm" />
-                </button>
-              </div>
-              <span className="flex-1 font-medium text-sm text-[#1A1A1A] truncate">
+              <span className="w-7 shrink-0 text-xs text-[#9A9A94] tabular-nums group-hover:text-[#B8912C] transition-colors">
+                {i + 1}
+              </span>
+              <span
+                className="flex-1 min-w-0 font-medium text-sm text-[#1A1A1A] truncate"
+                title={card.term}
+              >
                 {card.term}
               </span>
-              <span className="flex-1 text-sm text-[#6A6963] truncate">
+              <span
+                className="flex-1 min-w-0 text-sm text-[#6A6963] truncate"
+                title={card.definition}
+              >
                 {card.definition}
               </span>
+              <button
+                onClick={() => speak(card.term, card.termLang)}
+                aria-label={`播放「${card.term}」的發音`}
+                className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center text-[#9A9A94] opacity-60 hover:text-[#D4AF37] hover:bg-[#F6F4F0] hover:opacity-100 focus:opacity-100 transition-all"
+              >
+                <i className="fa-solid fa-volume-high text-sm" />
+              </button>
             </div>
           ))}
         </div>
