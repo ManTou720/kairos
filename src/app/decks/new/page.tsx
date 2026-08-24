@@ -27,6 +27,16 @@ export default function NewDeckPage() {
 
       <div className="flex-1 overflow-y-auto">
         <div className="p-6 lg:py-8 lg:px-20 max-w-[960px] mx-auto w-full">
+          <p className="text-sm text-[#6A6963] mb-5">
+            <i className="fa-solid fa-wand-magic-sparkles text-[#B8912C] mr-1.5" />
+            想用 AI 從影片、圖片或 PDF 建立卡片？
+            <Link
+              href="/import"
+              className="font-medium text-[#B8912C] hover:text-[#D4AF37] hover:underline ml-1"
+            >
+              前往匯入頁面
+            </Link>
+          </p>
           <DeckForm />
         </div>
       </div>

@@ -128,7 +128,7 @@ export default function FlashcardCard({
               <i className="fa-solid fa-volume-high" />
             </button>
           )}
-          <p className="font-display font-medium text-3xl sm:text-4xl lg:text-[44px] leading-snug text-center text-[#1A1A1A] break-words max-h-full overflow-y-auto">
+          <p className="font-display font-medium text-3xl sm:text-4xl lg:text-[44px] leading-snug text-center text-[#1A1A1A] break-words text-balance max-h-full overflow-y-auto">
             {term}
           </p>
           <span className="absolute bottom-5 left-1/2 -translate-x-1/2 text-xs text-[#9A9A94]">
@@ -146,7 +146,7 @@ export default function FlashcardCard({
               <i className="fa-solid fa-volume-high" />
             </button>
           )}
-          <p className="text-xl sm:text-2xl text-center text-[#1A1A1A] break-words max-h-full overflow-y-auto">
+          <p className="text-xl sm:text-2xl text-center text-[#1A1A1A] break-words text-pretty leading-relaxed max-h-full overflow-y-auto">
             {definition}
           </p>
         </div>

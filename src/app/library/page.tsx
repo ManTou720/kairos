@@ -34,12 +34,21 @@ export default function LibraryPage() {
         <h1 className="font-display text-[28px] font-bold text-[#1A1A1A]">
           你的圖書室
         </h1>
-        <Link
-          href="/decks/new"
-          className="inline-flex items-center rounded-full bg-[#D4AF37] px-5 py-2 text-sm font-semibold text-[#1A1A1A] hover:bg-[#C9A02E] transition-colors"
-        >
-          <i className="fa-solid fa-plus" /> 新建
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/import"
+            className="inline-flex items-center rounded-full border border-[#D5C8B2] bg-white px-4 py-2 text-sm font-medium text-[#1A1A1A] hover:bg-[#EADCC5]/30 transition-colors"
+          >
+            <i className="fa-solid fa-file-import mr-2 text-xs text-[#B8912C]" />
+            匯入
+          </Link>
+          <Link
+            href="/decks/new"
+            className="inline-flex items-center rounded-full bg-[#D4AF37] px-5 py-2 text-sm font-semibold text-[#1A1A1A] hover:bg-[#C9A02E] transition-colors"
+          >
+            <i className="fa-solid fa-plus" /> 新建
+          </Link>
+        </div>
       </div>
 
       {/* Tabs */}

@@ -204,7 +204,7 @@ export default function LearnPage({
           </div>
 
           {/* Term */}
-          <p className="font-display text-3xl lg:text-4xl font-semibold text-[#1A1A1A] leading-snug break-words">
+          <p className="font-display text-3xl lg:text-4xl font-semibold text-[#1A1A1A] leading-snug break-words text-balance">
             {q.card.term}
           </p>
 
@@ -241,7 +241,7 @@ export default function LearnPage({
                   >
                     {LETTERS[i]}
                   </kbd>
-                  <span className="leading-snug">{option}</span>
+                  <span className="leading-snug text-pretty">{option}</span>
                 </button>
               );
             })}

@@ -212,7 +212,7 @@ export default function MatchPage({
       style =
         "border-[#D4AF37] bg-[#D4AF3715] border-2 font-semibold scale-[1.03] shadow-md";
     }
-    return `rounded-xl border min-h-[52px] px-3 py-2.5 flex items-center justify-center text-center text-sm lg:text-[15px] leading-snug text-[#1A1A1A] transition-all duration-200 ${style}`;
+    return `rounded-xl border min-h-[52px] px-3 py-2.5 flex items-center justify-center text-center text-sm lg:text-[15px] leading-snug text-[#1A1A1A] text-balance transition-all duration-200 ${style}`;
   }
 
   return (

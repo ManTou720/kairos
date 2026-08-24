@@ -248,7 +248,7 @@ export default function TestPage({
                   </div>
 
                   {/* Prompt */}
-                  <p className="text-lg font-semibold text-[#1A1A1A] leading-snug">
+                  <p className="text-lg font-semibold text-[#1A1A1A] leading-snug text-pretty">
                     {q.prompt}
                   </p>
 
@@ -311,7 +311,7 @@ export default function TestPage({
                                 <span className="w-2 h-2 rounded-full bg-[#D4AF37]" />
                               )}
                             </span>
-                            <span className="leading-snug">{option}</span>
+                            <span className="leading-snug text-pretty">{option}</span>
                           </button>
                         );
                       })}
