@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { mutate } from "swr";
@@ -30,6 +30,29 @@ export default function DeckDetailPage({
   const [previewIndex, setPreviewIndex] = useState(0);
   const [previewFlipped, setPreviewFlipped] = useState(false);
   const { speak } = useTTS();
+
+  // 預覽卡鍵盤導覽（← →）
+  useEffect(() => {
+    if (!deck) return;
+    const last = deck.cards.length - 1;
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      )
+        return;
+      setPreviewFlipped(false);
+      if (e.key === "ArrowLeft")
+        setPreviewIndex((i) => Math.max(0, i - 1));
+      if (e.key === "ArrowRight")
+        setPreviewIndex((i) => Math.min(last, i + 1));
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [deck]);
 
   if (isLoading) {
     return (
@@ -76,31 +99,36 @@ export default function DeckDetailPage({
       href: `/decks/${deckId}/flashcards`,
       min: 1,
       icon: "fa-clone",
+      desc: "翻面複習，快速過一輪",
     },
     {
       name: "學習",
       href: `/decks/${deckId}/learn`,
       min: MIN_CARDS_FOR_LEARN,
       icon: "fa-graduation-cap",
+      desc: "選擇題＋間隔重複",
     },
     {
       name: "測試",
       href: `/decks/${deckId}/test`,
       min: MIN_CARDS_FOR_TEST,
       icon: "fa-file-pen",
+      desc: "計分測驗，檢核成果",
     },
     {
       name: "配對",
       href: `/decks/${deckId}/match`,
       min: MIN_CARDS_FOR_MATCH,
       icon: "fa-link",
+      desc: "限時連連看，挑戰手速",
     },
   ];
 
   return (
-    <div className="p-6 lg:p-8 space-y-6 max-w-5xl mx-auto">
+    <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-x-10 lg:items-start">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between lg:col-span-2">
         <div>
           <h1 className="font-display text-[32px] font-bold text-[#1A1A1A]">
             {deck.title}
@@ -146,8 +174,8 @@ export default function DeckDetailPage({
         />
       </div>
 
-      {/* Study Modes - white StudyModeCards */}
-      <div className="flex flex-wrap gap-3">
+      {/* Study Modes — 手機：橫向卡片；桌面：右側 sticky 欄（見下方 aside） */}
+      <div className="flex flex-wrap gap-3 lg:hidden">
         {modes.map((mode) => {
           const disabled = cardCount < mode.min;
           const inner = (
@@ -189,10 +217,20 @@ export default function DeckDetailPage({
       </div>
 
       {/* Preview Flashcard */}
+      {/* Main column: 預覽 + 詞語列表 */}
+      <div className="space-y-6 min-w-0">
       {deck.cards[0] && (
         <section>
-          <h2 className="text-base font-semibold text-[#1A1A1A] mb-3">預覽</h2>
-          <div className="flex items-center gap-3 max-w-xl">
+          <div className="flex items-baseline justify-between mb-3">
+            <h2 className="text-base font-semibold text-[#1A1A1A]">預覽</h2>
+            <span className="text-xs text-[#9A9A94] hidden sm:flex items-center gap-1.5">
+              <kbd className="px-1.5 py-0.5 rounded border border-[#D5C8B2] bg-white text-[10px] font-sans">←</kbd>
+              <kbd className="px-1.5 py-0.5 rounded border border-[#D5C8B2] bg-white text-[10px] font-sans">→</kbd>
+              切換
+            </span>
+          </div>
+          {/* 箭頭覆蓋在卡片兩側，卡片佔滿主欄寬度 */}
+          <div className="relative px-0 sm:px-6">
             <button
               aria-label="上一張"
               disabled={previewIndex === 0}
@@ -200,17 +238,17 @@ export default function DeckDetailPage({
                 setPreviewIndex((i) => Math.max(0, i - 1));
                 setPreviewFlipped(false);
               }}
-              className="shrink-0 w-10 h-10 rounded-full border border-[#D5C8B2] bg-white flex items-center justify-center text-[#6A6963] hover:border-[#D4AF37] hover:text-[#1A1A1A] active:scale-[0.95] disabled:opacity-30 disabled:pointer-events-none transition-all"
+              className="absolute left-0 sm:-left-1 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full border border-[#E8DDD0] bg-white shadow-md flex items-center justify-center text-[#6A6963] hover:text-[#1A1A1A] hover:border-[#D4AF37] active:scale-[0.93] disabled:opacity-30 disabled:pointer-events-none transition-all"
             >
-              <i className="fa-solid fa-chevron-left text-sm" />
+              <i className="fa-solid fa-chevron-left" />
             </button>
             <div
-              className="flex-1 min-w-0 flip-card cursor-pointer select-none animate-fade-in"
+              className="w-full flip-card cursor-pointer select-none animate-fade-in"
               key={deck.cards[safePreviewIndex].id}
               onClick={() => setPreviewFlipped((v) => !v)}
             >
               <div
-                className={`flip-card-inner relative w-full h-[220px] sm:h-[240px] ${
+                className={`flip-card-inner relative w-full h-[260px] sm:h-[320px] ${
                   previewFlipped ? "flipped" : ""
                 }`}
               >
@@ -226,11 +264,11 @@ export default function DeckDetailPage({
                   >
                     <i className="fa-solid fa-volume-high" />
                   </button>
-                  <span className="absolute top-4 right-4 text-xs text-[#9A9A94] tabular-nums">
+                  <span className="absolute top-4 right-4 rounded-full bg-[#F0EBDF] px-2.5 py-1 text-xs font-medium text-[#6A6963] tabular-nums">
                     {previewIndex + 1} / {deck.cards.length}
                   </span>
                   <div className="w-full h-full flex items-center justify-center">
-                    <p className="font-display text-[28px] sm:text-[32px] font-medium text-[#1A1A1A] text-center leading-snug break-words max-h-full overflow-y-auto">
+                    <p className="font-display text-[32px] sm:text-[40px] font-medium text-[#1A1A1A] text-center leading-snug break-words text-balance max-h-full overflow-y-auto">
                       {deck.cards[safePreviewIndex].term}
                     </p>
                   </div>
@@ -255,7 +293,7 @@ export default function DeckDetailPage({
                     <i className="fa-solid fa-volume-high" />
                   </button>
                   <div className="w-full h-full flex items-center justify-center">
-                    <p className="text-lg sm:text-xl text-center text-[#1A1A1A] leading-relaxed break-words max-h-full overflow-y-auto">
+                    <p className="text-xl sm:text-2xl text-center text-[#1A1A1A] leading-relaxed break-words text-pretty max-h-full overflow-y-auto">
                       {deck.cards[safePreviewIndex].definition}
                     </p>
                   </div>
@@ -269,9 +307,9 @@ export default function DeckDetailPage({
                 setPreviewIndex((i) => Math.min(deck.cards.length - 1, i + 1));
                 setPreviewFlipped(false);
               }}
-              className="shrink-0 w-10 h-10 rounded-full border border-[#D5C8B2] bg-white flex items-center justify-center text-[#6A6963] hover:border-[#D4AF37] hover:text-[#1A1A1A] active:scale-[0.95] disabled:opacity-30 disabled:pointer-events-none transition-all"
+              className="absolute right-0 sm:-right-1 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full border border-[#E8DDD0] bg-white shadow-md flex items-center justify-center text-[#6A6963] hover:text-[#1A1A1A] hover:border-[#D4AF37] active:scale-[0.93] disabled:opacity-30 disabled:pointer-events-none transition-all"
             >
-              <i className="fa-solid fa-chevron-right text-sm" />
+              <i className="fa-solid fa-chevron-right" />
             </button>
           </div>
         </section>
@@ -323,6 +361,71 @@ export default function DeckDetailPage({
           ))}
         </div>
       </section>
+      </div>
+
+      {/* Desktop: 右側 sticky 學習模式欄（Quizlet/Knowt 式） */}
+      <aside className="hidden lg:block min-w-0">
+        <div className="sticky top-20">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-[#9A9A94] px-1 mb-2.5">
+            學習模式
+          </p>
+          <div className="space-y-2.5">
+            {modes.map((mode) => {
+              const disabled = cardCount < mode.min;
+              const cls = disabled
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:border-[#D4AF37] hover:shadow-md";
+              const body = (
+                <>
+                  <span className="w-10 h-10 rounded-xl bg-[#D4AF37]/15 flex items-center justify-center shrink-0">
+                    <i
+                      className={`fa-solid ${mode.icon} ${
+                        disabled ? "text-[#9A9A94]" : "text-[#D4AF37]"
+                      }`}
+                    />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span
+                      className={`block text-sm font-bold ${
+                        disabled ? "text-[#9A9A94]" : "text-[#1A1A1A]"
+                      }`}
+                    >
+                      {mode.name}
+                    </span>
+                    <span className="block text-xs text-[#9A9A94] truncate">
+                      {disabled ? `需至少 ${mode.min} 張卡片` : mode.desc}
+                    </span>
+                  </span>
+                  {!disabled && (
+                    <i className="fa-solid fa-chevron-right text-xs text-[#D5C8B2] group-hover:text-[#B8912C] transition-colors" />
+                  )}
+                </>
+              );
+              return disabled ? (
+                <div
+                  key={mode.name}
+                  className={`group flex items-center gap-3.5 rounded-xl border border-[#E8DDD0] bg-white px-4 py-4 transition-all ${cls}`}
+                >
+                  {body}
+                </div>
+              ) : (
+                <Link
+                  key={mode.name}
+                  href={mode.href}
+                  className={`group flex items-center gap-3.5 rounded-xl border border-[#E8DDD0] bg-white px-4 py-4 transition-all ${cls}`}
+                >
+                  {body}
+                </Link>
+              );
+            })}
+          </div>
+          <p className="text-xs text-[#9A9A94] leading-relaxed px-1 mt-5">
+            <i className="fa-solid fa-lightbulb text-[#B8912C] mr-1.5" />
+            先用預覽熟悉詞語，再選一個模式開始練習。
+          </p>
+        </div>
+      </aside>
+      </div>
 
       <Modal
         open={showDelete}
