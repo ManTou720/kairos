@@ -41,7 +41,7 @@ export default function DashboardPage() {
                 key={deck.id}
                 className="rounded-xl border border-[#E8DDD0] bg-white p-5 transition-shadow hover:shadow-md"
               >
-                <h3 className="text-base font-semibold text-[#1A1A1A] truncate">
+                <h3 className="text-lg font-semibold text-[#1A1A1A] truncate">
                   {deck.title}
                 </h3>
                 {deck.description && (
@@ -49,13 +49,15 @@ export default function DashboardPage() {
                     {deck.description}
                   </p>
                 )}
-                <div className="mt-3 flex items-center gap-2 text-xs text-[#9A9A94]">
-                  <span>{deck.cardCount} 張卡片</span>
+                <div className="mt-3 flex items-center gap-2 text-[13px] text-[#6A6963]">
+                  <span>
+                    已複習 {deck.learnedCount}/{deck.cardCount} 張卡片
+                  </span>
                 </div>
                 <ProgressBar value={deck.learnedCount} max={deck.cardCount} className="mt-3" />
                 <Link
                   href={`/decks/${deck.id}`}
-                  className="mt-3 inline-flex items-center rounded-lg bg-[#D4AF37] px-4 py-2 text-sm font-semibold text-[#1A1A1A] hover:bg-[#C9A02E] transition-colors"
+                  className="mt-3 inline-flex items-center rounded-full bg-[#D4AF37] px-5 py-2 text-sm font-semibold text-[#1A1A1A] hover:bg-[#C9A02E] transition-colors"
                 >
                   繼續
                 </Link>
@@ -75,7 +77,7 @@ export default function DashboardPage() {
             <p className="text-[#6A6963] mb-4">還沒有學習集</p>
             <Link
               href="/decks/new"
-              className="inline-flex items-center rounded-lg bg-[#D4AF37] px-4 py-2 text-sm font-semibold text-[#1A1A1A] hover:bg-[#C9A02E] transition-colors"
+              className="inline-flex items-center rounded-full bg-[#D4AF37] px-5 py-2 text-sm font-semibold text-[#1A1A1A] hover:bg-[#C9A02E] transition-colors"
             >
               建立你的第一個學習集
             </Link>
@@ -88,16 +90,13 @@ export default function DashboardPage() {
                 href={`/decks/${deck.id}`}
                 className="flex items-center justify-between rounded-xl border border-[#E8DDD0] bg-white px-5 py-4 hover:shadow-md transition-shadow"
               >
-                <div className="flex items-center gap-3">
-                  <i className="fa-regular fa-clock text-[#9A9A94] text-sm" />
-                  <div>
-                    <h3 className="font-semibold text-[#1A1A1A] text-sm">
-                      {deck.title}
-                    </h3>
-                    <p className="text-xs text-[#9A9A94] mt-1">
-                      {deck.cardCount} 張卡片
-                    </p>
-                  </div>
+                <div className="space-y-1">
+                  <h3 className="font-semibold text-[#1A1A1A] text-base">
+                    {deck.title}
+                  </h3>
+                  <p className="text-[13px] text-[#6A6963]">
+                    {deck.cardCount} cards &middot; by {deck.authorName}
+                  </p>
                 </div>
                 <i className="fa-solid fa-chevron-right text-xs text-[#9A9A94]" />
               </Link>
@@ -112,8 +111,8 @@ export default function DashboardPage() {
           <h2 className="font-[family-name:var(--font-display)] text-[28px] font-medium text-[#1A1A1A] tracking-tight mb-4">
             其他學習者的熱門選擇
           </h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {sorted.slice(2, 5).map((deck) => (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {sorted.slice(2, 6).map((deck) => (
               <DeckCard key={deck.id} deck={deck} />
             ))}
           </div>

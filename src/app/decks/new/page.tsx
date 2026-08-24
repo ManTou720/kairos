@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import DeckForm from "@/components/deck/DeckForm";
+import Button from "@/components/ui/Button";
 
 export default function NewDeckPage() {
   return (
@@ -15,17 +16,13 @@ export default function NewDeckPage() {
           >
             <i className="fa-solid fa-xmark text-xl" />
           </Link>
-          <span className="font-bold text-[#1A1A1A] text-xl" style={{ fontFamily: "var(--font-display)" }}>
+          <span className="font-[family-name:var(--font-display)] font-bold text-[#1A1A1A] text-2xl">
             建立新的學習集
           </span>
         </div>
-        <button
-          type="submit"
-          form="deck-form"
-          className="inline-flex items-center justify-center rounded-full bg-[#D4AF37] text-white font-semibold px-5 py-2 text-sm hover:bg-[#C9A02E] transition-colors disabled:opacity-50"
-        >
+        <Button type="submit" form="deck-form">
           建立
-        </button>
+        </Button>
       </div>
 
       <div className="flex-1 overflow-y-auto">

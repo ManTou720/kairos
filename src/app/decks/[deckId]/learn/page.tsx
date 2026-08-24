@@ -112,18 +112,18 @@ export default function LearnPage({
           {/* Instruction */}
           <p className="text-sm font-medium text-[#1A1A1A]">選擇正確的詞語</p>
 
-          {/* Options */}
-          <div className="space-y-3">
+          {/* Options - horizontal pills */}
+          <div className="flex flex-wrap items-center gap-3">
             {q.options.map((option, i) => {
               let style =
                 "border-[#D5C8B2] bg-white hover:border-[#D4AF37] cursor-pointer";
               if (selected) {
                 if (option === q.card.definition) {
-                  style = "border-[#2BAC6E] bg-[#E8F5EE] border-2";
+                  style = "border-[#2BAC6E] bg-[#E8F5EE]";
                 } else if (option === selected) {
-                  style = "border-[#E85D3A] bg-[#FFF3EE] border-2";
+                  style = "border-[#E85D3A] bg-[#FFF3EE]";
                 } else {
-                  style = "border-[#D5C8B2] bg-white opacity-40";
+                  style = "border-[#E8DDD0] bg-white opacity-40";
                 }
               }
 
@@ -132,23 +132,23 @@ export default function LearnPage({
                   key={i}
                   onClick={() => session.handleSelect(option)}
                   disabled={!!selected}
-                  className={`w-full flex items-center rounded-full border px-4 h-12 text-sm text-[#1A1A1A] transition-all ${style}`}
+                  className={`flex items-center rounded-full border px-4 h-12 text-sm text-[#1A1A1A] transition-all ${style}`}
                 >
                   {option}
                 </button>
               );
             })}
-          </div>
 
-          {/* Don't know link */}
-          {!selected && (
-            <button
-              onClick={() => session.handleSelect("")}
-              className="text-sm font-medium text-[#D4AF37] hover:underline"
-            >
-              不知道嗎？
-            </button>
-          )}
+            {/* Don't know link */}
+            {!selected && (
+              <button
+                onClick={() => session.handleSelect("")}
+                className="text-sm font-medium text-[#D4AF37] hover:underline"
+              >
+                不知道嗎？
+              </button>
+            )}
+          </div>
 
           {/* Next button */}
           {selected && (

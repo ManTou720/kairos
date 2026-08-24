@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { mutate } from "swr";
 import { useDeck } from "@/hooks/useDecks";
 import * as api from "@/lib/api";
-import { formatDate } from "@/lib/utils";
 import {
   MIN_CARDS_FOR_LEARN,
   MIN_CARDS_FOR_TEST,
@@ -14,6 +13,8 @@ import {
 } from "@/lib/constants";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
+import MoreMenu from "@/components/ui/MoreMenu";
+import { useAuth } from "@/hooks/useAuth";
 import { useTTS } from "@/hooks/useTTS";
 
 export default function DeckDetailPage({
@@ -24,6 +25,7 @@ export default function DeckDetailPage({
   const { deckId } = use(params);
   const { data: deck, isLoading } = useDeck(deckId);
   const router = useRouter();
+  const { user } = useAuth();
   const [showDelete, setShowDelete] = useState(false);
   const { speak } = useTTS();
 
@@ -94,65 +96,89 @@ export default function DeckDetailPage({
   return (
     <div className="p-6 lg:p-8 space-y-6">
       {/* Header */}
-      <div>
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold text-[#1A1A1A]">
-              {deck.title}
-            </h1>
-            {deck.description && (
-              <p className="text-[#6A6963] mt-1">{deck.description}</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="font-[family-name:var(--font-display)] text-[32px] font-bold text-[#1A1A1A]">
+            {deck.title}
+          </h1>
+          {deck.description && (
+            <p className="text-[#6A6963] mt-1">{deck.description}</p>
+          )}
+          <div className="flex items-center flex-wrap gap-x-3 gap-y-2 mt-2 text-sm">
+            {user && (
+              <span className="font-semibold text-[#1A1A1A]">
+                {user.username}
+              </span>
             )}
-            <div className="flex items-center gap-3 mt-2 text-sm text-[#9A9A94]">
-              <span>{cardCount} 張卡片</span>
-              <span>&middot;</span>
-              <span>更新於 {formatDate(deck.updatedAt)}</span>
-            </div>
-          </div>
-          <div className="flex gap-2 shrink-0">
-            <Link href={`/decks/${deckId}/edit`}>
-              <Button variant="secondary" size="sm">
-                <i className="fa-solid fa-pen mr-1" /> 編輯
-              </Button>
-            </Link>
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={() => setShowDelete(true)}
-            >
-              刪除
-            </Button>
+            <span className="text-[#6A6963]">&middot;</span>
+            <span className="text-[#6A6963]">{cardCount} 個詞語</span>
+            <span className="text-[#6A6963]">&middot;</span>
+            {/* Language selector (design: LanguageSelector pills) */}
+            <span className="inline-flex items-center gap-2">
+              <span className="px-3 py-1 rounded-full border border-[#D5C8B2] bg-white text-xs text-[#1A1A1A]">
+                義大利文
+              </span>
+              <i className="fa-solid fa-arrow-right text-[#9A9A94] text-xs" />
+              <span className="px-3 py-1 rounded-full border border-[#D5C8B2] bg-white text-xs text-[#1A1A1A]">
+                中文
+              </span>
+            </span>
           </div>
         </div>
+        <MoreMenu
+          items={[
+            {
+              icon: "pen",
+              label: "編輯",
+              onClick: () => router.push(`/decks/${deckId}/edit`),
+            },
+            {
+              icon: "trash",
+              label: "刪除",
+              danger: true,
+              onClick: () => setShowDelete(true),
+            },
+          ]}
+        />
       </div>
 
-      {/* Language selector placeholder */}
-      <div className="flex items-center gap-2 text-sm text-[#6A6963]">
-        <span className="px-3 py-1.5 rounded-lg border border-[#D5C8B2] bg-white">義大利文</span>
-        <i className="fa-solid fa-arrow-right text-[#9A9A94]" />
-        <span className="px-3 py-1.5 rounded-lg border border-[#D5C8B2] bg-white">中文</span>
-      </div>
-
-      {/* Study Modes - horizontal tab row */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      {/* Study Modes - white StudyModeCards */}
+      <div className="flex flex-wrap gap-3">
         {modes.map((mode) => {
           const disabled = cardCount < mode.min;
+          const inner = (
+            <>
+              <span className="w-9 h-9 rounded-lg bg-[#D4AF3720] flex items-center justify-center">
+                <i
+                  className={`fa-solid ${mode.icon} text-sm ${
+                    disabled ? "text-[#9A9A94]" : "text-[#D4AF37]"
+                  }`}
+                />
+              </span>
+              <span
+                className={`text-sm font-semibold ${
+                  disabled ? "text-[#9A9A94]" : "text-[#1A1A1A]"
+                }`}
+              >
+                {mode.name}
+              </span>
+            </>
+          );
           return disabled ? (
             <div
               key={mode.name}
-              className="flex items-center gap-2 rounded-lg border border-[#E8DDD0] bg-white px-4 py-2.5 text-sm text-[#9A9A94] opacity-50 shrink-0"
+              title={`至少需要 ${mode.min} 張卡片`}
+              className="flex items-center gap-3 rounded-xl border border-[#E8DDD0] bg-white px-[18px] py-3.5 opacity-50 shrink-0 cursor-not-allowed"
             >
-              <i className={`fa-solid ${mode.icon}`} />
-              <span>{mode.name}</span>
+              {inner}
             </div>
           ) : (
             <Link
               key={mode.name}
               href={mode.href}
-              className="flex items-center gap-2 rounded-lg border border-[#D4AF37] bg-[#D4AF3710] px-4 py-2.5 text-sm font-medium text-[#1A1A1A] hover:bg-[#D4AF3720] transition-colors shrink-0"
+              className="flex items-center gap-3 rounded-xl border border-[#E8DDD0] bg-white px-[18px] py-3.5 hover:border-[#D4AF37] hover:shadow-md transition-all shrink-0"
             >
-              <i className={`fa-solid ${mode.icon} text-[#D4AF37]`} />
-              <span>{mode.name}</span>
+              {inner}
             </Link>
           );
         })}
@@ -161,16 +187,17 @@ export default function DeckDetailPage({
       {/* Preview Flashcard */}
       {deck.cards[0] && (
         <section>
+          <h2 className="text-base font-semibold text-[#1A1A1A] mb-3">預覽</h2>
           <div className="rounded-2xl border border-[#E8DDD0] bg-white p-8 max-w-xl relative">
-            <div className="absolute top-4 right-4 flex gap-2">
-              <button onClick={() => speak(deck.cards[0].term, deck.cards[0].termLang)} className="text-[#9A9A94] hover:text-[#D4AF37] transition-colors">
+            <div className="absolute top-4 left-4 flex gap-3">
+              <button onClick={() => speak(deck.cards[0].term, deck.cards[0].termLang)} aria-label="播放發音" className="text-[#6A6963] hover:text-[#D4AF37] transition-colors">
                 <i className="fa-solid fa-volume-high" />
               </button>
-              <button className="text-[#9A9A94] hover:text-[#D4AF37] transition-colors">
+              <button aria-label="收藏" className="text-[#6A6963] hover:text-[#D4AF37] transition-colors">
                 <i className="fa-regular fa-star" />
               </button>
             </div>
-            <p className="font-[family-name:var(--font-display)] text-3xl text-[#1A1A1A] text-center">
+            <p className="font-[family-name:var(--font-display)] text-[32px] font-medium text-[#1A1A1A] text-center">
               {deck.cards[0].term}
             </p>
           </div>
@@ -184,22 +211,33 @@ export default function DeckDetailPage({
             本學習集中的詞語 ({cardCount})
           </h2>
         </div>
-        <div className="space-y-2">
+        <div className="divide-y divide-[#E8DDD0] border-t border-b border-[#E8DDD0]">
           {deck.cards.map((card) => (
             <div
               key={card.id}
-              className="flex items-center rounded-xl border border-[#E8DDD0] bg-white px-5 py-3"
+              className="flex items-center gap-4 py-3.5"
             >
-              <span className="flex-1 font-medium text-sm text-[#1A1A1A]">
+              <div className="flex items-center gap-3 shrink-0">
+                <button
+                  onClick={() => speak(card.term, card.termLang)}
+                  aria-label="播放發音"
+                  className="text-[#6A6963] hover:text-[#D4AF37] transition-colors"
+                >
+                  <i className="fa-solid fa-volume-high text-sm" />
+                </button>
+                <button
+                  aria-label="收藏"
+                  className="text-[#6A6963] hover:text-[#D4AF37] transition-colors"
+                >
+                  <i className="fa-regular fa-star text-sm" />
+                </button>
+              </div>
+              <span className="flex-1 font-medium text-sm text-[#1A1A1A] truncate">
                 {card.term}
               </span>
-              <div className="w-px h-6 bg-[#E8DDD0] mx-4" />
-              <span className="flex-1 text-sm text-[#6A6963]">
+              <span className="flex-1 text-sm text-[#6A6963] truncate">
                 {card.definition}
               </span>
-              <button onClick={() => speak(card.term, card.termLang)} className="ml-3 text-[#9A9A94] hover:text-[#D4AF37] transition-colors">
-                <i className="fa-solid fa-volume-high text-sm" />
-              </button>
             </div>
           ))}
         </div>

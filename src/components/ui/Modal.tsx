@@ -27,8 +27,8 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
         className="fixed inset-0 bg-black/50 transition-opacity"
         onClick={onClose}
       />
-      <div className="relative z-10 w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-        <h2 className="text-lg font-semibold text-[#1A1A1A] mb-4">{title}</h2>
+      <div className="relative z-10 w-full max-w-md rounded-2xl bg-white p-8 pt-10 pb-8 shadow-xl">
+        <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold text-[#1A1A1A] mb-6">{title}</h2>
         {children}
       </div>
     </div>

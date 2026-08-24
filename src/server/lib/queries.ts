@@ -17,6 +17,10 @@ export const deckSummaryColumns = {
   folderId: decks.folderId,
   createdAt: decks.createdAt,
   updatedAt: decks.updatedAt,
+  authorName:
+    sql<string>`(SELECT username FROM users WHERE users.id = decks.user_id)`.mapWith(
+      String
+    ),
   cardCount:
     sql<number>`(SELECT COUNT(*) FROM cards WHERE cards.deck_id = decks.id)`.mapWith(
       Number

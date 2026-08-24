@@ -15,9 +15,9 @@ function NavItem({ href, icon, label, active }: NavItemProps) {
   return (
     <Link
       href={href}
-      className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+      className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition-colors ${
         active
-          ? "bg-[#1A2D8A] text-[#EADCC5] font-medium"
+          ? "bg-[#1A2D8A] text-[#D4AF37] font-semibold"
           : "text-[#EADCC5]/70 hover:bg-[#1A2D8A]/50 hover:text-[#EADCC5]"
       }`}
     >
@@ -47,13 +47,12 @@ export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: (
         } lg:flex`}
       >
         <div className="p-6 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-[#D4AF37] flex items-center justify-center">
-            <i className="fa-solid fa-bolt text-[#0D2275] text-sm" />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/logo.png" alt="Kairos" className="w-8 h-8 rounded-lg" />
           <Link
             href="/"
             onClick={onClose}
-            className="font-[family-name:var(--font-display)] text-2xl font-bold text-[#D4AF37] tracking-tight"
+            className="font-[family-name:var(--font-display)] text-2xl font-bold text-[#EADCC5] tracking-tight"
           >
             Kairos
           </Link>
@@ -75,7 +74,7 @@ export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: (
 
           <div className="my-3 h-px bg-[#1A2D8A]" />
 
-          <p className="px-3 py-2 text-xs font-semibold text-[#EADCC5]/50 uppercase tracking-wider">
+          <p className="px-4 py-2 text-[11px] font-semibold text-[#9A9A94] uppercase tracking-wider">
             你的文件夾
           </p>
 

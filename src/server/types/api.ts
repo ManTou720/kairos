@@ -48,6 +48,8 @@ export interface DeckSummary {
   title: string;
   description: string;
   folderId: string | null;
+  /** Username of the deck owner. */
+  authorName: string;
   cardCount: number;
   /** Cards studied at least once (srRepetitions > 0). */
   learnedCount: number;

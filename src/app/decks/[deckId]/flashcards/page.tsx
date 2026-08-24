@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import { useDeck } from "@/hooks/useDecks";
 import { useFlashcardSession } from "@/features/flashcards/useFlashcardSession";
@@ -16,6 +16,8 @@ export default function FlashcardsPage({
   const { data: deck } = useDeck(deckId);
   const session = useFlashcardSession(deck?.cards);
   const { speak } = useTTS();
+  // 「追蹤進度」toggle：off 時按 ✓/✗ 只翻頁，不記錄知道/仍在學習
+  const [trackProgress, setTrackProgress] = useState(true);
 
   if (!deck) {
     return <div className="text-center py-12 text-[#9A9A94]">載入中...</div>;
@@ -48,6 +50,13 @@ export default function FlashcardsPage({
             <i className="fa-solid fa-shuffle" />
             <span className="hidden sm:inline">隨機</span>
           </button>
+          <span
+            title="設定（開發中）"
+            aria-disabled="true"
+            className="w-8 h-8 flex items-center justify-center rounded-full text-[#6A6963]/50 cursor-not-allowed"
+          >
+            <i className="fa-solid fa-gear" />
+          </span>
         </div>
       </div>
 
@@ -85,13 +94,13 @@ export default function FlashcardsPage({
         {/* X and Check buttons */}
         <div className="flex items-center justify-center gap-8">
           <button
-            onClick={session.markLearning}
+            onClick={() => (trackProgress ? session.markLearning() : session.next())}
             className="w-14 h-14 rounded-full bg-[#FFF3EE] flex items-center justify-center hover:bg-[#FFE8DE] transition-colors"
           >
             <i className="fa-solid fa-xmark text-2xl text-[#E85D3A]" />
           </button>
           <button
-            onClick={session.markKnown}
+            onClick={() => (trackProgress ? session.markKnown() : session.next())}
             className="w-14 h-14 rounded-full bg-[#E8F5EE] flex items-center justify-center hover:bg-[#D0EBD8] transition-colors"
           >
             <i className="fa-solid fa-check text-2xl text-[#2BAC6E]" />
@@ -101,15 +110,37 @@ export default function FlashcardsPage({
         {/* Bottom bar */}
         <div className="flex items-center justify-between w-full max-w-[720px]">
           <button
-            onClick={session.prev}
-            disabled={session.index === 0}
-            className="text-[#5C4A32] hover:text-[#1A1A1A] disabled:opacity-30 transition-colors"
+            aria-label="播放發音"
+            onClick={() =>
+              speak(
+                session.flipped ? current.definition : current.term,
+                session.flipped ? current.defLang : current.termLang
+              )
+            }
+            className="text-[#5C4A32] hover:text-[#1A1A1A] transition-colors"
           >
-            <i className="fa-solid fa-rotate-left text-lg" />
+            <i className="fa-solid fa-volume-high text-lg" />
           </button>
-          <div className="flex items-center gap-2">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={trackProgress}
+            onClick={() => setTrackProgress((v) => !v)}
+            className="flex items-center gap-2"
+          >
             <span className="text-sm font-medium text-[#D4AF37]">追蹤進度</span>
-          </div>
+            <span
+              className={`relative w-10 h-[22px] rounded-full transition-colors ${
+                trackProgress ? "bg-[#D4AF37]" : "bg-[#D5C8B2]"
+              }`}
+            >
+              <span
+                className={`absolute top-[3px] w-4 h-4 rounded-full bg-white shadow transition-all ${
+                  trackProgress ? "left-[21px]" : "left-[3px]"
+                }`}
+              />
+            </span>
+          </button>
           <button
             onClick={session.doShuffle}
             className="text-[#5C4A32] hover:text-[#1A1A1A] transition-colors"

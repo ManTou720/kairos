@@ -11,41 +11,53 @@ export default function NavBar({ onMenuToggle }: NavBarProps) {
   const { user, logout } = useAuth();
 
   return (
-    <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[#E8DDD0] bg-white h-14 px-4 lg:px-8">
-      <button
-        onClick={onMenuToggle}
-        className="lg:hidden text-[#1A1A1A] p-2 -ml-2 hover:bg-[#EADCC5]/50 rounded-lg transition-colors"
-      >
-        <i className="fa-solid fa-bars text-lg" />
-      </button>
+    <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[#E8DDD0] bg-white h-16 px-4 lg:px-5">
+      <div className="flex items-center gap-1 shrink-0">
+        <button
+          onClick={onMenuToggle}
+          aria-label="開啟選單"
+          className="text-[#6A6963] p-2 -ml-2 hover:bg-[#EADCC5]/50 rounded-lg transition-colors"
+        >
+          <i className="fa-solid fa-bars text-lg" />
+        </button>
+        <Link href="/" aria-label="Kairos 首頁">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/logo.png" alt="Kairos" className="w-8 h-8" />
+        </Link>
+      </div>
 
       <Link
         href="/search"
-        className="flex items-center gap-2 rounded-lg border border-[#D5C8B2] bg-[#EADCC5]/30 px-3 py-1.5 text-sm text-[#6A6963] hover:border-[#D4AF37] transition-colors flex-1 max-w-md mx-4"
+        className="flex items-center gap-2.5 rounded-full border border-[#D5C8B2] bg-white px-4 py-2.5 text-sm text-[#9A9A94] hover:border-[#D4AF37] transition-colors flex-1 max-w-md lg:max-w-[480px] mx-3 lg:mx-4"
       >
-        <i className="fa-solid fa-magnifying-glass text-xs" />
-        <span>搜尋學習集...</span>
+        <i className="fa-solid fa-magnifying-glass text-[#6A6963]" />
+        <span>搜尋學習集、教科書、問題</span>
       </Link>
 
       <div className="flex items-center gap-3">
         <Link
           href="/decks/new"
-          className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#D4AF37] text-[#1A1A1A] hover:bg-[#C9A02E] transition-colors"
+          aria-label="建立學習集"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-[#D4AF37] text-[#1A1A1A] hover:bg-[#C9A02E] transition-colors"
         >
-          <i className="fa-solid fa-plus text-sm" />
+          <i className="fa-solid fa-plus" />
         </Link>
         {user && (
-          <>
-            <div className="w-8 h-8 rounded-full bg-[#0D2275] flex items-center justify-center text-white text-xs font-medium">
-              {user.username.charAt(0).toUpperCase()}
-            </div>
-            <button
-              onClick={logout}
-              className="text-sm text-[#6A6963] hover:text-[#1A1A1A] transition-colors hidden sm:inline"
-            >
-              <i className="fa-solid fa-right-from-bracket" />
-            </button>
-          </>
+          <div
+            title={user.username}
+            className="w-9 h-9 rounded-full bg-[#6A6963] flex items-center justify-center text-white text-sm font-medium"
+          >
+            {user.username.charAt(0).toUpperCase()}
+          </div>
+        )}
+        {user && (
+          <button
+            onClick={logout}
+            aria-label="登出"
+            className="w-9 h-9 flex items-center justify-center rounded-full text-[#6A6963] hover:text-[#1A1A1A] hover:bg-[#EADCC5]/50 transition-colors"
+          >
+            <i className="fa-solid fa-right-from-bracket" />
+          </button>
         )}
       </div>
     </header>

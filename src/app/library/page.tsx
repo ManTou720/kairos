@@ -36,19 +36,19 @@ export default function LibraryPage() {
         </h1>
         <Link
           href="/decks/new"
-          className="inline-flex items-center rounded-lg bg-[#D4AF37] px-4 py-2 text-sm font-semibold text-[#1A1A1A] hover:bg-[#C9A02E] transition-colors"
+          className="inline-flex items-center rounded-full bg-[#D4AF37] px-5 py-2 text-sm font-semibold text-[#1A1A1A] hover:bg-[#C9A02E] transition-colors"
         >
-          <i className="fa-solid fa-plus mr-2" /> 新建
+          <i className="fa-solid fa-plus" /> 新建
         </Link>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-[#D5C8B2] pb-2">
+      <div className="flex gap-6">
         <button
           onClick={() => setTab("sets")}
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+          className={`text-sm transition-colors ${
             tab === "sets"
-              ? "bg-[#D4AF3720] text-[#1A1A1A]"
+              ? "font-semibold text-[#1A1A1A]"
               : "text-[#6A6963] hover:text-[#1A1A1A]"
           }`}
         >
@@ -56,9 +56,9 @@ export default function LibraryPage() {
         </button>
         <button
           onClick={() => setTab("folders")}
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+          className={`text-sm transition-colors ${
             tab === "folders"
-              ? "bg-[#D4AF3720] text-[#1A1A1A]"
+              ? "font-semibold text-[#1A1A1A]"
               : "text-[#6A6963] hover:text-[#1A1A1A]"
           }`}
         >
@@ -67,7 +67,7 @@ export default function LibraryPage() {
       </div>
 
       {tab === "sets" ? (
-        <div className="space-y-2">
+        <div className="space-y-4">
           {sorted.length === 0 ? (
             <p className="text-center py-12 text-[#6A6963]">
               還沒有學習集。建立你的第一個吧！
@@ -79,16 +79,13 @@ export default function LibraryPage() {
                 href={`/decks/${deck.id}`}
                 className="flex items-center justify-between rounded-xl border border-[#E8DDD0] bg-white px-5 py-4 hover:shadow-md transition-shadow"
               >
-                <div className="flex items-center gap-3">
-                  <i className="fa-regular fa-clock text-[#9A9A94] text-sm" />
-                  <div>
-                    <h3 className="font-semibold text-[#1A1A1A] text-sm">
-                      {deck.title}
-                    </h3>
-                    <p className="text-xs text-[#9A9A94] mt-0.5">
-                      {deck.cardCount} 張卡片
-                    </p>
-                  </div>
+                <div className="space-y-1">
+                  <h3 className="font-semibold text-[#1A1A1A] text-base">
+                    {deck.title}
+                  </h3>
+                  <p className="text-[13px] text-[#6A6963]">
+                    {deck.cardCount} cards &middot; by {deck.authorName}
+                  </p>
                 </div>
                 <i className="fa-solid fa-chevron-right text-xs text-[#9A9A94]" />
               </Link>

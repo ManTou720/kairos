@@ -105,8 +105,7 @@ export default function DeckForm({ deck }: DeckFormProps) {
     setDropIndex(null);
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function submitDeck(target: "view" | "practice") {
     const validCards = cards.filter((c) => c.term.trim() && c.definition.trim());
     if (!title.trim() || validCards.length < 1) return;
 
@@ -119,7 +118,11 @@ export default function DeckForm({ deck }: DeckFormProps) {
           cards: validCards,
         });
         mutate(`/api/decks/${deck.id}`);
-        router.push(`/decks/${deck.id}`);
+        router.push(
+          target === "practice"
+            ? `/decks/${deck.id}/flashcards`
+            : `/decks/${deck.id}`
+        );
       } else {
         const newDeck = await api.createDeck({
           title: title.trim(),
@@ -127,11 +130,24 @@ export default function DeckForm({ deck }: DeckFormProps) {
           cards: validCards,
         });
         mutate("/api/decks");
-        router.push(`/decks/${newDeck.id}`);
+        router.push(
+          target === "practice"
+            ? `/decks/${newDeck.id}/flashcards`
+            : `/decks/${newDeck.id}`
+        );
       }
     } catch {
       setSubmitting(false);
     }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    await submitDeck("view");
+  }
+
+  function handleSubmitAndPractice() {
+    void submitDeck("practice");
   }
 
   const validCount = cards.filter((c) => c.term.trim() && c.definition.trim()).length;
@@ -153,9 +169,9 @@ export default function DeckForm({ deck }: DeckFormProps) {
           >
             說明（選填）
           </label>
-          <textarea
+          <input
             id="description"
-            rows={2}
+            type="text"
             placeholder="新增說明..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -211,16 +227,18 @@ export default function DeckForm({ deck }: DeckFormProps) {
       </div>
 
       <div className="flex gap-3 py-4">
-        <Button type="submit" className="rounded-full" disabled={!title.trim() || validCount < 1 || submitting}>
-          {submitting
-            ? "儲存中..."
-            : deck
-              ? "儲存變更"
-              : "建立"}
+        <Button
+          type="submit"
+          variant="secondary"
+          disabled={!title.trim() || validCount < 1 || submitting}
+        >
+          {submitting ? "儲存中..." : deck ? "儲存變更" : "建立"}
         </Button>
-        <Button type="button" variant="secondary" className="rounded-full" onClick={() => router.back()}>
-          建立與練習
-        </Button>
+        {!deck && (
+          <Button type="button" onClick={() => (handleSubmitAndPractice())}>
+            建立與練習
+          </Button>
+        )}
       </div>
     </form>
   );

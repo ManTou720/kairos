@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { DeckSummary } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
 
 interface DeckCardProps {
   deck: DeckSummary;
@@ -22,10 +21,10 @@ export default function DeckCard({ deck }: DeckCardProps) {
           {deck.description}
         </p>
       )}
-      <div className="mt-3 text-xs text-[#9A9A94]">
+      <div className="mt-3 text-[13px] text-[#6A6963]">
         <span>{deck.cardCount} cards</span>
         <span className="mx-1">&middot;</span>
-        <span>Updated {formatDate(deck.updatedAt)}</span>
+        <span>by {deck.authorName}</span>
       </div>
     </Link>
   );

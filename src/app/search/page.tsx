@@ -47,33 +47,45 @@ export default function SearchPage() {
           搜尋結果
         </h1>
         <div className="relative">
-          <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-[#9A9A94]" />
+          <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-[#6A6963]" />
           <input
             type="text"
             autoFocus
-            placeholder="搜尋學習集..."
+            placeholder="搜尋學習集、教科書、問題"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full rounded-xl border border-[#D5C8B2] bg-white pl-11 pr-4 py-3 text-sm text-[#1A1A1A] placeholder:text-[#9A9A94] focus:border-[#D4AF37] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+            className="w-full rounded-full border border-[#D5C8B2] bg-white pl-11 pr-4 py-2.5 text-sm text-[#1A1A1A] placeholder:text-[#9A9A94] focus:border-[#D4AF37] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
           />
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-[#D5C8B2] pb-2">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              tab === t.key
-                ? "bg-[#D4AF3720] text-[#1A1A1A]"
-                : "text-[#6A6963] hover:text-[#1A1A1A]"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+      {/* Tabs + sort */}
+      <div className="flex items-center justify-between">
+        <div className="flex gap-6">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`text-sm transition-colors ${
+                tab === t.key
+                  ? "font-semibold text-[#1A1A1A]"
+                  : "text-[#6A6963] hover:text-[#1A1A1A]"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() =>
+            setResults((prev) => [...prev].reverse())
+          }
+          className="inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm text-[#6A6963] hover:bg-[#EADCC5]/50 hover:text-[#1A1A1A] transition-colors"
+        >
+          <i className="fa-solid fa-arrow-down-wide-short" />
+          排序
+        </button>
       </div>
 
       {query.trim() && (
@@ -84,23 +96,20 @@ export default function SearchPage() {
         </p>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-4">
         {results.map((deck) => (
           <Link
             key={deck.id}
             href={`/decks/${deck.id}`}
             className="flex items-center justify-between rounded-xl border border-[#E8DDD0] bg-white px-5 py-4 hover:shadow-md transition-shadow"
           >
-            <div className="flex items-center gap-3">
-              <i className="fa-solid fa-layer-group text-[#D4AF37]" />
-              <div>
-                <h3 className="font-semibold text-[#1A1A1A] text-sm">
-                  {deck.title}
-                </h3>
-                <p className="text-xs text-[#9A9A94] mt-1">
-                  {deck.cardCount} 張卡片
-                </p>
-              </div>
+            <div className="space-y-1">
+              <h3 className="font-semibold text-[#1A1A1A] text-base">
+                {deck.title}
+              </h3>
+              <p className="text-[13px] text-[#6A6963]">
+                {deck.cardCount} cards &middot; by {deck.authorName}
+              </p>
             </div>
             <i className="fa-solid fa-chevron-right text-xs text-[#9A9A94]" />
           </Link>

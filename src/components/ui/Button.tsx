@@ -11,16 +11,16 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles: Record<Variant, string> = {
-  primary: "bg-[#D4AF37] text-[#1A1A1A] hover:bg-[#C9A02E] shadow-sm",
+  primary: "bg-[#D4AF37] text-[#1A1A1A] font-semibold hover:bg-[#C9A02E] shadow-sm",
   secondary:
     "bg-white text-[#1A1A1A] border border-[#D5C8B2] hover:bg-[#EADCC5]/30 shadow-sm",
-  danger: "bg-[#8B0000] text-white hover:bg-[#7A0000] shadow-sm",
+  danger: "bg-[#8B0000] text-white font-semibold hover:bg-[#7A0000] shadow-sm",
   ghost: "text-[#6A6963] hover:text-[#1A1A1A] hover:bg-[#EADCC5]/50",
 };
 
 const sizeStyles = {
-  sm: "px-3 py-1.5 text-sm",
-  md: "px-4 py-2 text-sm",
+  sm: "px-4 py-2 text-sm",
+  md: "px-5 py-2.5 text-sm",
   lg: "px-6 py-3 text-base",
 };
 
@@ -34,7 +34,7 @@ export default function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
+        "inline-flex items-center justify-center gap-2 rounded-full font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
         variantStyles[variant],
         sizeStyles[size],
         className

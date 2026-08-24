@@ -28,12 +28,15 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0D2275] px-4">
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-[400px]">
         <div className="rounded-2xl bg-white p-8 shadow-xl">
           <div className="text-center mb-8">
-            <div className="w-14 h-14 rounded-xl bg-[#D4AF37] flex items-center justify-center mx-auto mb-4">
-              <i className="fa-solid fa-bolt text-[#0D2275] text-2xl" />
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/logo.png"
+              alt="Kairos"
+              className="w-16 h-16 mx-auto mb-4"
+            />
             <h1 className="font-[family-name:var(--font-display)] text-4xl font-bold text-[#0D2275] tracking-tight">
               Kairos
             </h1>
@@ -42,11 +45,14 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <h2 className="text-center text-lg font-semibold text-[#1A1A1A] mb-6">
+          <h2 className="font-[family-name:var(--font-display)] text-center text-[28px] font-bold text-[#0D2275] mb-1">
             歡迎來到 Kairos
           </h2>
+          <p className="text-center text-sm text-[#4A5568] mb-6">
+            輸入你的使用者名稱以開始學習
+          </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label
                 htmlFor="username"
@@ -73,7 +79,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading || !username.trim()}
-              className="w-full rounded-lg bg-[#D4AF37] px-4 py-3 text-sm font-semibold text-[#1A1A1A] hover:bg-[#C9A02E] disabled:opacity-50 transition-colors"
+              className="w-full rounded-full bg-[#D4AF37] px-4 py-3 text-sm font-semibold text-[#1A1A1A] hover:bg-[#C9A02E] disabled:opacity-50 transition-colors"
             >
               {loading ? "登入中..." : "確認進入"}
             </button>
