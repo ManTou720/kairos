@@ -47,6 +47,22 @@
   transform: rotateY(180deg);
 }
 
+/* Flashcard: new card entrance (after previous card flies out) */
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.965);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.card-enter {
+  animation: card-enter 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* Shake animation for match errors */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }

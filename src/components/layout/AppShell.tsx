@@ -54,7 +54,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-h-screen">
         <NavBar onMenuToggle={() => setSidebarOpen((o) => !o)} />
-        <main key={pathname} className="flex-1 pb-16 lg:pb-0 animate-fade-in">{children}</main>
+        <main key={pathname} className="flex-1 pb-24 lg:pb-0 animate-fade-in">{children}</main>
         <BottomTabBar />
       </div>
     </div>

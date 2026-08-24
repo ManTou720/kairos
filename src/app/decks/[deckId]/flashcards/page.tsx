@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useEffect, useMemo } from "react";
+import { use, useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useDeck } from "@/hooks/useDecks";
 import { useFlashcardSession } from "@/features/flashcards/useFlashcardSession";
@@ -18,6 +18,9 @@ export default function FlashcardsPage({
   const { data: deck } = useDeck(deckId);
   const session = useFlashcardSession(deck?.cards);
   const { speak } = useTTS();
+  // 評分飛出動畫:滑動/按鈕/鍵盤共用同一條路徑
+  const [exitDir, setExitDir] = useState<"left" | "right" | null>(null);
+  const exitingRef = useRef(false);
   // 「追蹤進度」toggle：off 時按 ✓/✗ 只翻頁，不記錄知道/仍在學習
   const [trackProgress, setTrackProgress] = useState(true);
   // 設定:自動播放發音
@@ -34,11 +37,28 @@ export default function FlashcardsPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoplay, session.index, session.phase]);
 
+  /** 評分 → 卡片朝對應方向飛出 → 換下一張 */
+  function gradeAndFly(dir: "left" | "right") {
+    if (exitingRef.current || session.phase !== "studying") return;
+    exitingRef.current = true;
+    setExitDir(dir);
+    window.setTimeout(() => {
+      if (trackProgress) {
+        if (dir === "right") session.markKnown();
+        else session.markLearning();
+      } else {
+        session.next();
+      }
+      setExitDir(null);
+      exitingRef.current = false;
+    }, 240);
+  }
+
   // 鍵盤快速鍵:1 = 仍在學習、2 = 知道
   const gradeKeys = useMemo(
     () => ({
-      Digit1: () => (trackProgress ? session.markLearning() : session.next()),
-      Digit2: () => (trackProgress ? session.markKnown() : session.next()),
+      Digit1: () => gradeAndFly("left"),
+      Digit2: () => gradeAndFly("right"),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [trackProgress, session.index, session.phase]
@@ -271,7 +291,10 @@ export default function FlashcardsPage({
         </div>
 
         {/* Flashcard */}
-        <div className="w-full max-w-[720px]">
+        <div
+          key={`${session.index}-${session.phase}`}
+          className="w-full max-w-[720px] card-enter"
+        >
           <FlashcardCard
             term={current.term}
             definition={current.definition}
@@ -280,19 +303,16 @@ export default function FlashcardsPage({
             termLang={current.termLang}
             defLang={current.defLang}
             onSpeak={speak}
-            onSwipeLeft={() =>
-              trackProgress ? session.markLearning() : session.next()
-            }
-            onSwipeRight={() =>
-              trackProgress ? session.markKnown() : session.next()
-            }
+            exitDirection={exitDir}
+            onSwipeLeft={() => gradeAndFly("left")}
+            onSwipeRight={() => gradeAndFly("right")}
           />
         </div>
 
         {/* Grade buttons */}
         <div className="flex items-center justify-center gap-4 sm:gap-8">
           <button
-            onClick={() => (trackProgress ? session.markLearning() : session.next())}
+            onClick={() => gradeAndFly("left")}
             className="group flex items-center gap-2.5 rounded-full bg-[#FFF3EE] pl-4 pr-5 py-3 hover:bg-[#FFE8DE] active:scale-[0.97] transition-all"
           >
             <span className="w-9 h-9 rounded-full bg-white/70 flex items-center justify-center">
@@ -308,7 +328,7 @@ export default function FlashcardsPage({
             </span>
           </button>
           <button
-            onClick={() => (trackProgress ? session.markKnown() : session.next())}
+            onClick={() => gradeAndFly("right")}
             className="group flex items-center gap-2.5 rounded-full bg-[#E8F5EE] pl-4 pr-5 py-3 hover:bg-[#D0EBD8] active:scale-[0.97] transition-all"
           >
             <span className="w-9 h-9 rounded-full bg-white/70 flex items-center justify-center">
