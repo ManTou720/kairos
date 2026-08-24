@@ -13,7 +13,7 @@ export default function DeckCard({ deck }: DeckCardProps) {
       href={`/decks/${deck.id}`}
       className="block rounded-xl border border-[#E8DDD0] bg-white p-5 transition-shadow hover:shadow-md"
     >
-      <h3 className="text-base font-semibold text-[#1A1A1A] truncate font-[family-name:var(--font-ui)]">
+      <h3 className="text-base font-semibold text-[#1A1A1A] truncate">
         {deck.title}
       </h3>
       {deck.description && (

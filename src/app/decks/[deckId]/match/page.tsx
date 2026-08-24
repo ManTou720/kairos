@@ -47,7 +47,7 @@ export default function MatchPage({
         >
           <i className="fa-solid fa-xmark mr-2" /> 返回
         </Link>
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold text-[#1A1A1A] mb-2">
+        <h1 className="font-display text-3xl font-bold text-[#1A1A1A] mb-2">
           配對模式
         </h1>
         <p className="text-[#6A6963] mb-6">
@@ -63,7 +63,7 @@ export default function MatchPage({
   if (phase === "done") {
     return (
       <div className="text-center py-12 px-4">
-        <h2 className="font-[family-name:var(--font-display)] text-3xl font-bold text-[#1A1A1A] mb-2">
+        <h2 className="font-display text-3xl font-bold text-[#1A1A1A] mb-2">
           完成！
         </h2>
         <p className="text-lg text-[#6A6963] mb-1">

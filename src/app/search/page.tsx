@@ -49,7 +49,7 @@ export default function SearchPage() {
   return (
     <div className="p-6 lg:p-8 space-y-6">
       <div>
-        <h1 className="font-[family-name:var(--font-display)] text-[28px] font-bold text-[#1A1A1A] mb-4">
+        <h1 className="font-display text-[28px] font-bold text-[#1A1A1A] mb-4">
           搜尋結果
         </h1>
         <div className="relative">

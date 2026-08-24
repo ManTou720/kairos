@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import Logo from "@/components/ui/Logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,13 +32,8 @@ export default function LoginPage() {
       <div className="w-full max-w-[400px]">
         <div className="rounded-2xl bg-white p-8 shadow-xl">
           <div className="text-center mb-8">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/logo.png"
-              alt="Kairos"
-              className="w-16 h-16 mx-auto mb-4 rounded-xl"
-            />
-            <h1 className="font-[family-name:var(--font-display)] text-4xl font-bold text-[#0D2275] tracking-tight">
+            <Logo size={64} className="mx-auto mb-4" />
+            <h1 className="font-display text-4xl font-bold text-[#0D2275] tracking-tight">
               Kairos
             </h1>
             <p className="mt-1 text-[#6A6963] text-sm">
@@ -45,7 +41,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <h2 className="font-[family-name:var(--font-display)] text-center text-[28px] font-bold text-[#0D2275] mb-1">
+          <h2 className="font-display text-center text-[28px] font-bold text-[#0D2275] mb-1">
             歡迎來到 Kairos
           </h2>
           <p className="text-center text-sm text-[#4A5568] mb-6">

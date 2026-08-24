@@ -44,7 +44,7 @@ export default function LearnPage({
     const correct = results.filter(Boolean).length;
     return (
       <div className="text-center py-12 px-4">
-        <h2 className="font-[family-name:var(--font-display)] text-3xl font-bold text-[#1A1A1A] mb-2">
+        <h2 className="font-display text-3xl font-bold text-[#1A1A1A] mb-2">
           學習完成！
         </h2>
         <p className="text-lg text-[#6A6963] mb-1">
@@ -100,7 +100,7 @@ export default function LearnPage({
           </span>
 
           {/* Term */}
-          <p className="font-[family-name:var(--font-display)] text-2xl lg:text-[28px] font-semibold text-[#1A1A1A]">
+          <p className="font-display text-2xl lg:text-[28px] font-semibold text-[#1A1A1A]">
             {q.card.term}
           </p>
 

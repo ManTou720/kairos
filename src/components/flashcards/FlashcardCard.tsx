@@ -45,7 +45,7 @@ export default function FlashcardCard({
               <i className="fa-solid fa-volume-high" />
             </button>
           )}
-          <p className="font-[family-name:var(--font-display)] text-2xl text-center text-[#1A1A1A]">{term}</p>
+          <p className="font-display text-2xl text-center text-[#1A1A1A]">{term}</p>
         </div>
         <div className="flip-card-back absolute inset-0 flex items-center justify-center rounded-2xl border border-[#E8DDD0] bg-[#D4AF3710] p-8 shadow-sm">
           {onSpeak && (

@@ -55,7 +55,7 @@ export default function FoldersPage() {
   return (
     <div className="p-6 lg:p-8 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-[family-name:var(--font-display)] text-[28px] font-bold text-[#1A1A1A]">
+        <h1 className="font-display text-[28px] font-bold text-[#1A1A1A]">
           文件夾
         </h1>
         <Button onClick={() => setShowCreate(true)}>

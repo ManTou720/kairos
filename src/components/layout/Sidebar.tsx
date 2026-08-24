@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useFolders } from "@/hooks/useDecks";
+import Logo from "@/components/ui/Logo";
 
 interface NavItemProps {
   href: string;
@@ -47,12 +48,11 @@ export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: (
         } lg:flex`}
       >
         <div className="p-6 flex items-center gap-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/logo.png" alt="Kairos" className="w-8 h-8 rounded-xl" />
+          <Logo size={32} className="shrink-0" />
           <Link
             href="/"
             onClick={onClose}
-            className="font-[family-name:var(--font-display)] text-2xl font-bold text-[#EADCC5] tracking-tight"
+            className="font-display text-2xl font-bold text-[#EADCC5] tracking-tight"
           >
             Kairos
           </Link>

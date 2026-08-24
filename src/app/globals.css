@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-ui);
+  --font-sans: var(--font-ui), var(--font-sans-tc), "PingFang TC", "Microsoft JhengHei", sans-serif;
   --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-display);
+  --font-display: var(--font-cormorant), var(--font-serif-tc), "Songti TC", serif;
 
   --color-bg-page: #EADCC5;
   --color-bg-card: #FFFFFF;

@@ -94,7 +94,7 @@ export default function FolderDetailPage({
         <div>
           <div className="flex items-center gap-3 mb-1">
             <i className="fa-solid fa-folder text-[#D4AF37] text-xl" />
-            <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold text-[#1A1A1A]">
+            <h1 className="font-display text-3xl font-bold text-[#1A1A1A]">
               {folder.name}
             </h1>
           </div>

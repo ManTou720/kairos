@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import Logo from "../ui/Logo";
 
 interface NavBarProps {
   onMenuToggle?: () => void;
@@ -32,8 +33,7 @@ export default function NavBar({ onMenuToggle }: NavBarProps) {
           <i className="fa-solid fa-bars text-lg" />
         </button>
         <Link href="/" aria-label="Kairos 首頁">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/logo.png" alt="Kairos" className="w-8 h-8" />
+          <Logo size={32} />
         </Link>
       </div>
 

@@ -32,7 +32,7 @@ export default function DashboardPage() {
       {/* Jump back in */}
       {jumpBackIn.length > 0 && (
         <section>
-          <h2 className="font-[family-name:var(--font-display)] text-[28px] font-medium text-[#1A1A1A] tracking-tight mb-4">
+          <h2 className="font-display text-[28px] font-medium text-[#1A1A1A] tracking-tight mb-4">
             繼續學習
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -69,7 +69,7 @@ export default function DashboardPage() {
 
       {/* Recents */}
       <section>
-        <h2 className="font-[family-name:var(--font-display)] text-[28px] font-medium text-[#1A1A1A] tracking-tight mb-4">
+        <h2 className="font-display text-[28px] font-medium text-[#1A1A1A] tracking-tight mb-4">
           最近
         </h2>
         {recents.length === 0 ? (
@@ -108,7 +108,7 @@ export default function DashboardPage() {
       {/* Popular with other learners */}
       {sorted.length > 2 && (
         <section>
-          <h2 className="font-[family-name:var(--font-display)] text-[28px] font-medium text-[#1A1A1A] tracking-tight mb-4">
+          <h2 className="font-display text-[28px] font-medium text-[#1A1A1A] tracking-tight mb-4">
             其他學習者的熱門選擇
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

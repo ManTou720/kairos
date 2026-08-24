@@ -50,7 +50,7 @@ export default function EditDeckPage({
           >
             <i className="fa-solid fa-xmark text-xl" />
           </Link>
-          <span className="font-[family-name:var(--font-display)] font-bold text-[#1A1A1A] text-2xl">
+          <span className="font-display font-bold text-[#1A1A1A] text-2xl">
             編輯學習集
           </span>
         </div>

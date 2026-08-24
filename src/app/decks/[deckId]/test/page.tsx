@@ -66,7 +66,7 @@ export default function TestPage({
         >
           <i className="fa-solid fa-xmark mr-2" /> 返回
         </Link>
-        <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold text-[#1A1A1A] mb-6">
+        <h1 className="font-display text-2xl font-bold text-[#1A1A1A] mb-6">
           測試設定
         </h1>
 
@@ -257,7 +257,7 @@ export default function TestPage({
   return (
     <div className="p-6 lg:p-8 max-w-2xl mx-auto">
       <div className="text-center py-8 mb-6">
-        <h2 className="font-[family-name:var(--font-display)] text-3xl font-bold text-[#1A1A1A] mb-2">
+        <h2 className="font-display text-3xl font-bold text-[#1A1A1A] mb-2">
           測試完成！
         </h2>
         <p className="text-lg text-[#6A6963]">
