@@ -56,6 +56,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#0D2275",
+  viewportFit: "cover", // 讓 env(safe-area-inset-*) 在 iOS 回報實際安全距離
 };
 
 export default function RootLayout({

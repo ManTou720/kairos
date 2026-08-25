@@ -20,7 +20,11 @@ export default function BottomTabBar() {
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-[#E8DDD0]/70 bg-[#FBF8F1]/95 backdrop-blur pb-[env(safe-area-inset-bottom)]"
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-[#E8DDD0]/70 bg-[#FBF8F1]/95 backdrop-blur"
+      style={{
+        // 手勢導航列留白：真機用系統安全距離，至少保留 14px 不讓內容貼底
+        paddingBottom: "max(env(safe-area-inset-bottom), 14px)",
+      }}
       aria-label="主要導覽"
     >
       <div className="flex h-[64px] items-stretch">
